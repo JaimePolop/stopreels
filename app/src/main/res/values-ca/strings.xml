@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">StopReels</string>
+    <string name="startup_body">Preparant la teva pausa digital…</string>
+    <string name="blocked_overlay_title">Reel bloquejat</string>
+    <string name="overlay_exit">Sortir d’Instagram</string>
+    <string name="home">Inici</string>
+    <string name="settings">Configuració</string>
+    <string name="help">Ajuda</string>
+    <string name="home_title">La teva pausa digital</string>
+    <string name="home_subtitle">Bloqueja els Reels fora de les converses privades.</string>
+    <string name="protection_active">Protecció activa</string>
+    <string name="protection_paused">Protecció pausada</string>
+    <string name="protection_ready">Servei d’accessibilitat preparat</string>
+    <string name="protection_needs_accessibility">Activa l’accessibilitat per protegir el teu feed</string>
+    <string name="reels_warning_title">Avís sobre l’ús dels Reels</string>
+    <string name="reels_warning_show">Veure més</string>
+    <string name="reels_warning_hide">Amagar</string>
+    <string name="reels_references_title">Referències</string>
+    <string name="setup_title">Configura StopReels</string>
+    <string name="block_reels">Bloquejar Reels</string>
+    <string name="feed_reels_title">Reels del feed</string>
+    <string name="reels_tab_title">Pestanya Reels</string>
+    <string name="temporary_title">Permetre desbloqueig temporal</string>
+    <string name="stories_title">Bloquejar històries</string>
+    <string name="normal_videos_title">Vídeos normals</string>
+    <string name="private_media_title">Permetre contingut privat</string>
+    <string name="diagnostic_title">Mode de diagnòstic</string>
+    <string name="schedule_title">Horari protegit</string>
+    <string name="daily_limit_title">Límit diari de desbloqueig</string>
+    <string name="off">Desactivat</string>
+    <string name="settings_title">Configuració</string>
+    <string name="language_title">Idioma</string>
+    <string name="language_summary">L’anglès és l’idioma predeterminat. Tria un altre idioma per a la interfície.</string>
+    <string name="enable_accessibility">Activar l’accessibilitat</string>
+    <string name="cancel">Cancel·lar</string>
+    <string name="confirm">Confirmar</string>
+    <string name="disable_blocking_title">Desactivar el bloqueig?</string>
+    <string name="disable_blocking_confirm">N’estic segur</string>
+</resources>

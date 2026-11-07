@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">StopReels</string>
+    <string name="startup_body">Preparazione della pausa digitale…</string>
+    <string name="blocked_overlay_title">Reel bloccato</string>
+    <string name="overlay_exit">Esci da Instagram</string>
+    <string name="home">Home</string>
+    <string name="settings">Impostazioni</string>
+    <string name="help">Aiuto</string>
+    <string name="home_title">La tua pausa digitale</string>
+    <string name="home_subtitle">Blocca i Reel fuori dalle conversazioni private.</string>
+    <string name="protection_active">Protezione attiva</string>
+    <string name="protection_paused">Protezione in pausa</string>
+    <string name="protection_ready">Servizio di accessibilità pronto</string>
+    <string name="protection_needs_accessibility">Attiva l’accessibilità per proteggere il feed</string>
+    <string name="reels_warning_title">Avviso sull’uso dei Reel</string>
+    <string name="reels_warning_show">Leggi di più</string>
+    <string name="reels_warning_hide">Nascondi</string>
+    <string name="reels_references_title">Riferimenti</string>
+    <string name="setup_title">Configura StopReels</string>
+    <string name="block_reels">Blocca i Reel</string>
+    <string name="feed_reels_title">Reel nel feed</string>
+    <string name="reels_tab_title">Scheda Reel</string>
+    <string name="temporary_title">Consenti sblocco temporaneo</string>
+    <string name="stories_title">Blocca le storie</string>
+    <string name="normal_videos_title">Video normali</string>
+    <string name="private_media_title">Consenti contenuti privati</string>
+    <string name="diagnostic_title">Modalità diagnostica</string>
+    <string name="schedule_title">Orario protetto</string>
+    <string name="daily_limit_title">Limite giornaliero di sblocco</string>
+    <string name="off">Disattivato</string>
+    <string name="settings_title">Impostazioni</string>
+    <string name="language_title">Lingua</string>
+    <string name="language_summary">L’inglese è la lingua predefinita. Scegli un’altra lingua per l’interfaccia.</string>
+    <string name="enable_accessibility">Attiva accessibilità</string>
+    <string name="cancel">Annulla</string>
+    <string name="confirm">Conferma</string>
+    <string name="disable_blocking_title">Disattivare il blocco?</string>
+    <string name="disable_blocking_confirm">Sono sicuro</string>
+</resources>

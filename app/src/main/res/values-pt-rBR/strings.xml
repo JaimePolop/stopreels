@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">StopReels</string>
+    <string name="startup_body">Preparando sua pausa digital…</string>
+    <string name="blocked_overlay_title">Reel bloqueado</string>
+    <string name="overlay_exit">Sair do Instagram</string>
+    <string name="home">Início</string>
+    <string name="settings">Configurações</string>
+    <string name="help">Ajuda</string>
+    <string name="home_title">Sua pausa digital</string>
+    <string name="home_subtitle">Bloqueie Reels fora das conversas privadas.</string>
+    <string name="protection_active">Proteção ativa</string>
+    <string name="protection_paused">Proteção pausada</string>
+    <string name="protection_ready">Serviço de acessibilidade pronto</string>
+    <string name="protection_needs_accessibility">Ative a acessibilidade para proteger seu feed</string>
+    <string name="reels_warning_title">Aviso sobre o uso de Reels</string>
+    <string name="reels_warning_show">Ver mais</string>
+    <string name="reels_warning_hide">Ocultar</string>
+    <string name="reels_references_title">Referências</string>
+    <string name="setup_title">Configurar o StopReels</string>
+    <string name="block_reels">Bloquear Reels</string>
+    <string name="feed_reels_title">Reels do feed</string>
+    <string name="reels_tab_title">Aba Reels</string>
+    <string name="temporary_title">Permitir desbloqueio temporário</string>
+    <string name="stories_title">Bloquear stories</string>
+    <string name="normal_videos_title">Vídeos normais</string>
+    <string name="private_media_title">Permitir mídia privada</string>
+    <string name="diagnostic_title">Modo de diagnóstico</string>
+    <string name="schedule_title">Horário protegido</string>
+    <string name="daily_limit_title">Limite diário de desbloqueio</string>
+    <string name="off">Desativado</string>
+    <string name="settings_title">Configurações</string>
+    <string name="language_title">Idioma</string>
+    <string name="language_summary">Inglês é o idioma padrão. Escolha outro idioma para a interface.</string>
+    <string name="enable_accessibility">Ativar acessibilidade</string>
+    <string name="cancel">Cancelar</string>
+    <string name="confirm">Confirmar</string>
+    <string name="disable_blocking_title">Desativar o bloqueio?</string>
+    <string name="disable_blocking_confirm">Tenho certeza</string>
+</resources>

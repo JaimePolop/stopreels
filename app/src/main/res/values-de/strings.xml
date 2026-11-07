@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">StopReels</string>
+    <string name="startup_body">Digitale Pause wird vorbereitet…</string>
+    <string name="blocked_overlay_title">Reel blockiert</string>
+    <string name="overlay_exit">Instagram verlassen</string>
+    <string name="home">Startseite</string>
+    <string name="settings">Einstellungen</string>
+    <string name="help">Hilfe</string>
+    <string name="home_title">Deine digitale Pause</string>
+    <string name="home_subtitle">Reels außerhalb privater Unterhaltungen blockieren.</string>
+    <string name="protection_active">Schutz aktiv</string>
+    <string name="protection_paused">Schutz pausiert</string>
+    <string name="protection_ready">Bedienungshilfedienst bereit</string>
+    <string name="protection_needs_accessibility">Aktiviere Bedienungshilfen, um deinen Feed zu schützen</string>
+    <string name="reels_warning_title">Hinweis zur Reels-Nutzung</string>
+    <string name="reels_warning_show">Mehr lesen</string>
+    <string name="reels_warning_hide">Ausblenden</string>
+    <string name="reels_references_title">Quellen</string>
+    <string name="setup_title">StopReels einrichten</string>
+    <string name="block_reels">Reels blockieren</string>
+    <string name="feed_reels_title">Reels im Feed</string>
+    <string name="reels_tab_title">Reels-Tab</string>
+    <string name="temporary_title">Vorübergehende Freigabe erlauben</string>
+    <string name="stories_title">Stories blockieren</string>
+    <string name="normal_videos_title">Normale Videos</string>
+    <string name="private_media_title">Private Medien erlauben</string>
+    <string name="diagnostic_title">Diagnosemodus</string>
+    <string name="schedule_title">Geschützter Zeitplan</string>
+    <string name="daily_limit_title">Tägliches Freigabelimit</string>
+    <string name="off">Aus</string>
+    <string name="settings_title">Einstellungen</string>
+    <string name="language_title">Sprache</string>
+    <string name="language_summary">Englisch ist die Standardsprache. Wähle eine andere Sprache für die Oberfläche.</string>
+    <string name="enable_accessibility">Bedienungshilfen aktivieren</string>
+    <string name="cancel">Abbrechen</string>
+    <string name="confirm">Bestätigen</string>
+    <string name="disable_blocking_title">Blockierung deaktivieren?</string>
+    <string name="disable_blocking_confirm">Ich bin sicher</string>
+</resources>

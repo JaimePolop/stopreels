@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="stopreels_navy">#12304A</color>
+    <color name="stopreels_navy_dark">#081E31</color>
+    <color name="stopreels_orange">#E57A44</color>
+    <color name="stopreels_orange_dark">#B9572B</color>
+    <color name="stopreels_background">#F6F8FB</color>
+</resources>
