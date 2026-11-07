@@ -1,91 +1,92 @@
 # StopReels
 
-StopReels es una aplicación nativa Android en Kotlin y Jetpack Compose que cubre, de forma local, señales de Reels dentro de Instagram para ayudar a reducir el desplazamiento compulsivo. Los vídeos compartidos en conversaciones privadas se dejan visibles.
+StopReels is a native Android application written in Kotlin and Jetpack Compose. It locally detects Reel signals inside Instagram to help reduce compulsive scrolling. Videos shared in private conversations remain visible.
 
-## Estado del proyecto
+## Project status
 
-El proyecto contiene:
+The project includes:
 
-- UI en Compose Material 3 con tema claro/oscuro, inglés por defecto y selector multidioma.
-- Arquitectura sencilla MVVM con `StopReelsViewModel`.
-- Preferencias y estadísticas locales mediante Preferences DataStore.
-- `AccessibilityService` limitado al paquete `com.instagram.android`.
-- Overlay opaco mediante `TYPE_ACCESSIBILITY_OVERLAY`, con desbloqueo temporal confirmable.
-- Detección pura y testeable para feed, pestaña Reels, Direct, publicaciones normales, historias y cambios de pantalla.
-- Sin permiso de Internet, sin cuentas, sin anuncios, sin analítica y sin capturas de pantalla.
-- Copyright y licencia propietaria documentados en [COPYRIGHT.md](COPYRIGHT.md) y [LICENSE](LICENSE).
+- Compose Material 3 UI with light/dark themes, English as the default language, and a multilingual selector.
+- A simple MVVM architecture with `StopReelsViewModel`.
+- Local preferences and statistics using Preferences DataStore.
+- An `AccessibilityService` restricted to the `com.instagram.android` package.
+- An opaque overlay using `TYPE_ACCESSIBILITY_OVERLAY`, with a confirmable temporary unlock.
+- Pure, testable detection for the feed, the Reels tab, Direct messages, regular posts, stories, and screen changes.
+- No Internet permission, accounts, ads, analytics, or screenshots.
+- Copyright and the current proprietary licence documented in [COPYRIGHT.md](COPYRIGHT.md) and [LICENSE](LICENSE).
 
-## Compilar
+## Build
 
-Requisitos: JDK 17 y Android SDK con la plataforma API requerida por Google Play.
+Requirements: JDK 17 and the Android SDK platform currently required by Google Play.
 
-Con Android Studio, abre esta carpeta, deja que sincronice Gradle y ejecuta `app`
-en un emulador o dispositivo con Android 8.0 (API 26) o superior.
+With Android Studio, open this folder, let Gradle sync, and run `app` on an emulator or a device running Android 8.0 (API 26) or later.
 
-También se puede compilar sin Android Studio:
+The project can also be built without Android Studio:
 
 ```bash
 ./gradlew test
 ./gradlew assembleDebug
 ```
 
-El APK debug se genera en `app/build/outputs/apk/debug/app-debug.apk`.
+The debug APK is generated at `app/build/outputs/apk/debug/app-debug.apk`.
 
-## Probar en un dispositivo físico
+## Test on a physical device
 
-1. Instala la variante debug desde Android Studio o con `adb install -r app/build/outputs/apk/debug/app-debug.apk`.
-2. Abre StopReels y lee la pantalla de bienvenida.
-3. Entra en **Abrir configuración de accesibilidad** y activa StopReels.
-4. Vuelve a la aplicación y comprueba que el estado indica **Servicio activo**.
-5. Abre Instagram y prueba la pestaña Reels, un Reel insertado en el feed y un vídeo compartido desde Direct.
-6. Comprueba que los Reels fuera de Direct quedan cubiertos y que el vídeo de una conversación privada no queda cubierto.
-7. Pulsa **Ver durante … segundos** si está activado y comprueba que el overlay vuelve al terminar el tiempo.
-8. Desactiva el servicio desde Ajustes > Accesibilidad para verificar el flujo de apagado.
+1. Install the debug variant from Android Studio or with `adb install -r app/build/outputs/apk/debug/app-debug.apk`.
+2. Open StopReels and read the welcome screen.
+3. Open **Accessibility settings** and enable StopReels.
+4. Return to the app and verify that the status says **Service active**.
+5. Open Instagram and test the Reels tab, a Reel inserted in the feed, and a video shared through Direct.
+6. Confirm that Reels outside Direct are covered and that a video in a private conversation is not covered.
+7. Tap **View for … seconds**, if enabled, and verify that the overlay returns when the timer ends.
+8. Disable the service from Settings > Accessibility to verify the shutdown flow.
 
-La activación del servicio y el overlay solo pueden probarse de forma real en Android; la lógica de detección está cubierta por tests JVM.
+The service and overlay can only be tested on a real Android device. The detection logic is covered by JVM tests.
 
-## Segundo plano y Xiaomi/POCO/Redmi
+## Background operation and Xiaomi/POCO/Redmi
 
-StopReels no mantiene un proceso propio ni necesita un `ForegroundService`: el trabajo lo realiza el `AccessibilityService` gestionado por Android mientras el usuario utiliza Instagram. La pantalla de StopReels puede estar cerrada.
+StopReels does not keep its own process alive and does not need a `ForegroundService`: Android manages the `AccessibilityService` while the user uses Instagram. The StopReels screen can be closed.
 
-En dispositivos Xiaomi, POCO o Redmi con MIUI/HyperOS, el sistema puede restringir servicios habilitados para ahorrar batería. Tras instalar la aplicación:
+On Xiaomi, POCO, or Redmi devices running MIUI/HyperOS, the system may restrict enabled services to save battery. After installing the application:
 
-1. Abre StopReels y activa el servicio en **Ajustes > Accesibilidad**.
-2. En **Ajustes > Aplicaciones > Gestionar aplicaciones > StopReels**, busca **Batería** y selecciona **Sin restricciones** cuando exista esa opción.
-3. En **Ajustes > Aplicaciones > Permisos > Autoinicio en segundo plano**, activa StopReels si esa pantalla aparece en tu versión.
-4. Evita deslizar StopReels fuera de Recientes si tu versión de HyperOS usa esa acción para limpiar procesos.
+1. Open StopReels and enable the service in **Settings > Accessibility**.
+2. In **Settings > Apps > Manage apps > StopReels**, open **Battery** and select **No restrictions** when available.
+3. In **Settings > Apps > Permissions > Background autostart**, enable StopReels if that screen exists on your version.
+4. Avoid swiping StopReels away from Recents if your HyperOS version uses that action to clean processes.
 
-Los nombres exactos cambian entre versiones de MIUI/HyperOS. La aplicación incluye botones para abrir los ajustes de StopReels y la pantalla de batería. No se solicita `INTERNET`, no se inicia un servicio adicional y no se pide ignorar la optimización de batería de forma automática.
+The exact names vary between MIUI/HyperOS versions. The application includes buttons that open the StopReels settings and battery screen. It does not request `INTERNET`, start an additional service, or automatically request permission to ignore battery optimisation.
 
-## Cómo diferencia Reels de Direct
+## How Reel detection differs from Direct
 
-`ReelDetectionEngine` trabaja sobre una copia pequeña de la jerarquía de accesibilidad de la ventana activa. Busca señales explícitas de Reel en texto, descripción de contenido o `viewIdResourceName`, y considera la posición inferior de un elemento para identificar accesos directos.
+`ReelDetectionEngine` works on a small copy of the accessibility hierarchy from the active window. It looks for explicit Reel signals in text, content descriptions, or `viewIdResourceName`, and uses the lower position of an element to identify shortcuts.
 
-Antes de bloquear, calcula señales de contexto privado: Direct, mensajes, chat, conversación, el campo de escribir un mensaje y equivalentes en inglés. Si hay dos señales de conversación, o una señal junto con un campo editable de mensaje, el contexto se considera privado y no se crea ningún overlay, aunque el vídeo compartido mencione un Reel.
+Before blocking, it calculates private-context signals: Direct, messages, chat, conversation, the message composer, and their equivalents in other supported languages. If there are two conversation signals, or one conversation signal together with an editable message field, the context is treated as private and no overlay is created, even if the shared video mentions a Reel.
 
-No se bloquea un vídeo genérico sin una señal de Reel. Esta decisión reduce falsos positivos sobre publicaciones normales, pero significa que Instagram podría mostrar un Reel que no exponga ninguna señal accesible reconocible.
+A generic video without a Reel signal is not blocked. This reduces false positives on regular posts, but it means Instagram may show a Reel that exposes no recognisable accessibility signal.
 
-## Publicar en Google Play
+## Publish on Google Play
 
-Consulta [GOOGLE_PLAY_CHECKLIST.md](GOOGLE_PLAY_CHECKLIST.md). Google Play requiere un
-Android App Bundle firmado, una política de privacidad pública, el formulario Data safety
-y una declaración específica porque la aplicación utiliza `AccessibilityService`.
+See [GOOGLE_PLAY_CHECKLIST.md](GOOGLE_PLAY_CHECKLIST.md). Google Play requires a signed Android App Bundle, a public privacy policy, the Data safety form, and a specific declaration because the application uses `AccessibilityService`.
 
-## Privacidad
+## Privacy
 
-Consulta la [política de privacidad local](PRIVACY_POLICY.md). El servicio no solicita Internet ni captura la pantalla. Solo procesa temporalmente la jerarquía visible de Instagram y guarda preferencias/contadores en DataStore local.
+See the [privacy policy](PRIVACY_POLICY.md). The service does not request Internet access or capture the screen. It only processes Instagram's visible accessibility hierarchy temporarily and stores preferences/counters locally in DataStore.
 
-## Limitaciones conocidas
+## Known limitations
 
-- Instagram puede cambiar textos, IDs de recursos, jerarquía o ventanas sin aviso.
-- Android y las versiones de Instagram pueden exponer distinta información a los servicios de accesibilidad.
-- Ninguna heurística puede garantizar un bloqueo perfecto. El diseño prioriza no tapar Direct, historias desactivadas y publicaciones normales.
-- Un overlay de accesibilidad puede comportarse de forma distinta según fabricante, modo multiventana, rotación o permisos de accesibilidad.
-- En Xiaomi/POCO/Redmi, el ahorro de batería o el autoinicio pueden detener o retrasar el servicio hasta que el usuario marque la aplicación como **Sin restricciones**.
-- El desbloqueo temporal se basa en tiempo de proceso y puede reiniciarse si Android mata el servicio.
-- El contador representa detecciones locales del overlay, no una medición exacta del número de vídeos vistos.
+- Instagram may change text, resource IDs, hierarchy, or windows without notice.
+- Android and different Instagram versions may expose different information to accessibility services.
+- No heuristic can guarantee perfect blocking. The design prioritises not covering Direct, disabled stories, or regular posts.
+- An accessibility overlay may behave differently depending on the manufacturer, split-screen mode, rotation, or accessibility permissions.
+- On Xiaomi/POCO/Redmi devices, battery saving or autostart restrictions may stop or delay the service until the user selects **No restrictions**.
+- Temporary unlocking is based on process time and may restart if Android kills the service.
+- The counter represents local overlay detections, not an exact measurement of videos watched.
 
-## Estructura
+## Contributing
+
+The `main` branch is protected. Contributions must be submitted through forks and Pull Requests. See [CONTRIBUTING.md](CONTRIBUTING.md).
+
+## Project structure
 
 ```text
 app/src/main/java/com/stopreels/
