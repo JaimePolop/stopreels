@@ -2,6 +2,8 @@ package com.stopreels.service
 
 import android.accessibilityservice.AccessibilityService
 import android.accessibilityservice.AccessibilityServiceInfo
+import android.content.Context
+import android.content.res.Configuration
 import android.graphics.Color
 import android.graphics.PixelFormat
 import android.graphics.Rect
@@ -37,6 +39,7 @@ import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 import java.time.LocalDate
 import java.time.LocalTime
+import java.util.Locale
 
 /**
  * Local-only Instagram filter.
@@ -213,7 +216,7 @@ class StopReelsAccessibilityService : AccessibilityService() {
 
     private fun addBlockingOverlay(target: BlockTarget, currentPreferences: AppPreferences) {
         val view = BlockOverlayView(
-            context = this,
+            context = localizedOverlayContext(),
             target = target,
             durationSeconds = currentPreferences.unlockDurationSeconds,
             delaySeconds = currentPreferences.unlockDelaySeconds,
@@ -245,6 +248,13 @@ class StopReelsAccessibilityService : AccessibilityService() {
         } catch (_: SecurityException) {
             // Some OEM builds can revoke overlay access while the service is being disabled.
         }
+    }
+
+    private fun localizedOverlayContext(): Context {
+        val languageTag = preferences.languageTag.ifBlank { "en" }
+        val configuration = Configuration(resources.configuration)
+        configuration.setLocale(Locale.forLanguageTag(languageTag))
+        return createConfigurationContext(configuration)
     }
 
     private fun overlayBounds(bounds: ScreenRect): ScreenRect {
