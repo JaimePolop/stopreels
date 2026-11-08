@@ -214,8 +214,15 @@ object ReelDetectionEngine {
         val allText = nodes.flatMap { nodeSignals(it) }
         val hasSearchInputControl = nodes.any { node ->
             val className = node.className.orEmpty()
+            val normalizedId = node.viewId.orEmpty().lowercase()
             className.contains("SearchView", ignoreCase = true) ||
-                className.contains("EditText", ignoreCase = true)
+                className.contains("EditText", ignoreCase = true) ||
+                normalizedId.contains("search_bar") ||
+                normalizedId.contains("search_field") ||
+                normalizedId.contains("search_input") ||
+                normalizedId.contains("search_edit") ||
+                normalizedId.contains("buscar_bar") ||
+                normalizedId.contains("buscar_input")
         }
         val hasSearchResultSignal = allText.any { signal -> searchResultTokens.any(signal::contains) }
         val hasSearchIdSignal = nodes.any { node ->
