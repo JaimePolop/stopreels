@@ -190,6 +190,18 @@ class ReelDetectionTest {
     }
 
     @Test
+    fun searchScreenWithGenericSearchBarIsNotBlocked() {
+        val root = node(
+            children = listOf(
+                node(viewId = "com.instagram.android:id/search_bar"),
+                node(contentDescription = "Reel de Ana", bounds = ScreenRect(40, 400, 1_040, 1_200)),
+            ),
+        )
+
+        assertFalse(ReelDetectionEngine.detect(root, DetectionPreferences()).shouldBlock)
+    }
+
+    @Test
     fun feedReelUsesFullScreenOverlayBounds() {
         val card = ScreenRect(40, 360, 1040, 1_480)
         val root = node(
