@@ -92,7 +92,6 @@ data class DetectionPreferences(
     val blockShortcuts: Boolean = true,
     val blockStories: Boolean = false,
     val blockNormalVideos: Boolean = false,
-    val allowPrivateMedia: Boolean = true,
     val diagnosticMode: Boolean = false,
 )
 
@@ -155,6 +154,14 @@ object ReelDetectionEngine {
         "enviado por",
         "shared by",
         "sent by",
+        "reel sent",
+        "video sent",
+        "photo sent",
+        "image sent",
+        "reel enviado",
+        "video enviado",
+        "foto enviada",
+        "imagen enviada",
     )
     private val privateConversationTokens = listOf(
         "conversacion con",
@@ -204,6 +211,19 @@ object ReelDetectionEngine {
         "usuarios",
         "users",
     )
+    private val privateContainerIdTokens = listOf(
+        "direct",
+        "inbox",
+        "thread",
+        "conversation",
+        "chat",
+        "shared_media",
+        "sharedmedia",
+        "media_message",
+        "reel_shared",
+        "shared_reel",
+        "sent_media",
+    )
 
     fun detect(root: AccessibilityNodeSnapshot, preferences: DetectionPreferences): DetectionResult {
         if (!preferences.blockingEnabled) {
@@ -247,12 +267,22 @@ object ReelDetectionEngine {
         val hasSharedMediaSignal = allText.any { signal ->
             sharedMediaTokens.any(signal::contains)
         }
+        val hasPrivateContainerSignal = nodes.any { node ->
+            !isBottomNavigationNode(node, root.bounds) &&
+                node.viewId.orEmpty().lowercase(Locale.ROOT).let { id ->
+                    privateContainerIdTokens.any(id::contains)
+                }
+        }
         // Instagram often exposes "Direct" or "Mensajes" in the global navigation.
         // Those labels alone must never make the whole feed look like a private chat.
         val detectedPrivateContext = hasSharedMediaSignal ||
-            hasConversationSignal && (hasDirectRouteSignal || hasEditableMessageField) ||
+            hasConversationSignal ||
+            hasPrivateContainerSignal && (hasDirectRouteSignal || hasReelLikeContent(allText)) ||
             hasEditableMessageField && hasDirectRouteSignal
-        val isPrivateContext = preferences.allowPrivateMedia && detectedPrivateContext
+        // Direct and media shared by another person are always exempt. This is
+        // intentionally not configurable: a partial accessibility hierarchy
+        // must never turn a private message into a Reel block.
+        val isPrivateContext = detectedPrivateContext
 
         val hasStorySignal = allText.any { signal -> storyTokens.any(signal::contains) }
         if (hasStorySignal && !preferences.blockStories) {
@@ -404,6 +434,16 @@ object ReelDetectionEngine {
         val normalizedSignals = nodeSignals(node).map(::normalize)
         val routeLabel = normalizedSignals.any { it == "reels" || it == "clips" }
         return routeLabel && node.bounds.top >= screen.top + (screen.height * 0.65).toInt() && node.bounds.height <= 220
+    }
+
+    private fun isBottomNavigationNode(node: AccessibilityNodeSnapshot, screen: ScreenRect): Boolean {
+        if (screen.height <= 0) return false
+        val isSmall = node.bounds.height <= 220 && node.bounds.width <= (screen.width * 0.45f).toInt()
+        return isSmall && node.bounds.top >= screen.top + (screen.height * 0.72f).toInt()
+    }
+
+    private fun hasReelLikeContent(signals: List<String>): Boolean = signals.any { signal ->
+        reelTokens.any(signal::contains) || normalVideoTokens.any(signal::contains)
     }
 
     private fun nearestContainingNode(

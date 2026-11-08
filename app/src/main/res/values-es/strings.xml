@@ -72,6 +72,8 @@
     <string name="reels_tab_summary">Bloquea el visor de Reels, pero no el botón para entrar.</string>
     <string name="temporary_title">Permitir desbloqueo temporal</string>
     <string name="temporary_summary">Muestra un Reel durante un tiempo limitado tras confirmarlo.</string>
+    <string name="strict_mode_title">Modo estricto</string>
+    <string name="strict_mode_summary">Desactiva por completo el desbloqueo temporal hasta que desactives este modo.</string>
     <string name="duration_title">Duración del desbloqueo</string>
     <string name="unlock_delay_title">Espera antes de desbloquear</string>
     <string name="unlock_delay_summary">Después de pulsar para ver un Reel, espera este tiempo antes de confirmar el desbloqueo temporal.</string>
@@ -95,6 +97,13 @@
     <string name="reset_statistics">Restablecer estadísticas</string>
     <string name="statistics_reset">Estadísticas restablecidas</string>
     <string name="reset_statistics_body">Los dos contadores se pondrán a cero.</string>
+    <string name="statistics_title">Tu tiempo protegido</string>
+    <string name="statistics_week">Últimos 7 días</string>
+    <string name="statistics_today">Hoy</string>
+    <string name="statistics_reels_blocked">Reels bloqueados</string>
+    <string name="statistics_time_saved">Tiempo ahorrado</string>
+    <string name="statistics_streak">Racha de días</string>
+    <string name="statistics_chart_description">Reels bloqueados durante los últimos siete días</string>
     <string name="help_title">Ayuda y privacidad</string>
     <string name="how_it_works_title">Cómo funciona</string>
     <string name="how_it_works_body">El servicio observa únicamente Instagram en la pantalla activa. Usa señales de la interfaz —texto, accesibilidad, identificadores y estructura— para estimar si un elemento es un Reel. Cuando hay una señal suficiente, coloca una cubierta opaca local.</string>
@@ -107,7 +116,7 @@
     <string name="privacy_title">Privacidad</string>
     <string name="privacy_body">StopReels no tiene cuenta, servidor, anuncios, compras ni analítica. No hace scraping de Instagram ni guarda su contenido. Solo almacena tus preferencias y contadores en DataStore local.</string>
     <string name="copyright_title">Copyright y licencia</string>
-    <string name="copyright_body">Copyright © 2026 StopReels. Todos los derechos reservados. StopReels y su código fuente no pueden copiarse, redistribuirse ni publicarse dentro de otra aplicación sin permiso del titular.</string>
+    <string name="copyright_body">Copyright © 2026 StopReels. El código fuente está disponible bajo la licencia Apache 2.0. El nombre y el logotipo de StopReels siguen siendo marcas protegidas.</string>
     <string name="confirm_unlock_title">¿Ver este Reel?</string>
     <string name="confirm_unlock_body">El bloqueo se desactivará durante %1$d segundos y volverá automáticamente. Espera %2$d segundos antes de confirmar.</string>
     <string name="confirm_waiting">Espera %1$d s</string>

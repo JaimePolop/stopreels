@@ -48,6 +48,10 @@ class StopReelsViewModel(application: Application) : AndroidViewModel(applicatio
         viewModelScope.launch { repository.setTemporaryUnlockEnabled(enabled) }
     }
 
+    fun setStrictMode(enabled: Boolean) {
+        viewModelScope.launch { repository.setStrictMode(enabled) }
+    }
+
     fun setUnlockDurationSeconds(seconds: Int) {
         viewModelScope.launch { repository.setUnlockDurationSeconds(seconds) }
     }
@@ -62,10 +66,6 @@ class StopReelsViewModel(application: Application) : AndroidViewModel(applicatio
 
     fun setBlockNormalVideos(enabled: Boolean) {
         viewModelScope.launch { repository.setBlockNormalVideos(enabled) }
-    }
-
-    fun setAllowPrivateMedia(enabled: Boolean) {
-        viewModelScope.launch { repository.setAllowPrivateMedia(enabled) }
     }
 
     fun setDiagnosticMode(enabled: Boolean) {

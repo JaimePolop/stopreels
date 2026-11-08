@@ -72,6 +72,8 @@
     <string name="reels_tab_summary">Blocks the Reels viewer, but not the button used to enter it.</string>
     <string name="temporary_title">Allow temporary unlock</string>
     <string name="temporary_summary">Shows a Reel for a limited time after confirmation.</string>
+    <string name="strict_mode_title">Strict mode</string>
+    <string name="strict_mode_summary">Disables temporary unlock completely until you turn strict mode off.</string>
     <string name="duration_title">Unlock duration</string>
     <string name="unlock_delay_title">Waiting time before unlocking</string>
     <string name="unlock_delay_summary">After tapping to view a Reel, wait this long before you can confirm the temporary unlock.</string>
@@ -95,6 +97,13 @@
     <string name="reset_statistics">Reset statistics</string>
     <string name="statistics_reset">Statistics reset</string>
     <string name="reset_statistics_body">Both counters will be reset to zero.</string>
+    <string name="statistics_title">Your protected time</string>
+    <string name="statistics_week">Last 7 days</string>
+    <string name="statistics_today">Today</string>
+    <string name="statistics_reels_blocked">Reels blocked</string>
+    <string name="statistics_time_saved">Time saved</string>
+    <string name="statistics_streak">Day streak</string>
+    <string name="statistics_chart_description">Reels blocked during the last seven days</string>
     <string name="help_title">Help and privacy</string>
     <string name="how_it_works_title">How it works</string>
     <string name="how_it_works_body">The service only observes com.instagram.android on the active screen. It uses interface signals — text, accessibility, IDs, and structure — to estimate whether an element is a Reel. When there is a sufficient signal, it places a local opaque cover.</string>
@@ -107,7 +116,7 @@
     <string name="privacy_title">Privacy</string>
     <string name="privacy_body">StopReels has no account, server, ads, purchases, or analytics. It does not scrape Instagram or store its content. It only stores your preferences and two counters locally.</string>
     <string name="copyright_title">Copyright and licence</string>
-    <string name="copyright_body">Copyright © 2026 StopReels. All rights reserved. StopReels and its source code may not be copied, redistributed or published in another application without permission from the copyright holder.</string>
+    <string name="copyright_body">Copyright © 2026 StopReels. The source code is available under Apache License 2.0. The StopReels name and logo remain protected branding.</string>
     <string name="confirm_unlock_title">View this Reel?</string>
     <string name="confirm_unlock_body">Blocking will be disabled for %1$d seconds and then return automatically. Wait %2$d seconds before confirming.</string>
     <string name="confirm_waiting">Wait %1$d s</string>
