@@ -29,6 +29,7 @@ import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.background
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
@@ -80,14 +81,17 @@ import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.stopreels.R
 import com.stopreels.StopReelsViewModel
 import com.stopreels.data.AppPreferences
+import com.stopreels.data.DailyStat
 import com.stopreels.service.StopReelsAccessibilityService
 import kotlinx.coroutines.delay
+import java.time.LocalDate
 
 private enum class AppSection(val labelRes: Int) {
     HOME(R.string.home),
@@ -195,11 +199,11 @@ fun StopReelsApp(viewModel: StopReelsViewModel) {
                     onReelsTabChanged = viewModel::setBlockReelsTab,
                     onShortcutsChanged = viewModel::setBlockShortcuts,
                     onTemporaryChanged = viewModel::setTemporaryUnlockEnabled,
+                    onStrictModeChanged = viewModel::setStrictMode,
                     onDurationChanged = viewModel::setUnlockDurationSeconds,
                     onUnlockDelayChanged = viewModel::setUnlockDelaySeconds,
                     onStoriesChanged = viewModel::setBlockStories,
                     onNormalVideosChanged = viewModel::setBlockNormalVideos,
-                    onPrivateMediaChanged = viewModel::setAllowPrivateMedia,
                     onDiagnosticChanged = viewModel::setDiagnosticMode,
                     onScheduleChanged = viewModel::setScheduleEnabled,
                     onScheduleStartChanged = viewModel::setScheduleStartHour,
@@ -333,6 +337,7 @@ private fun HomeScreen(
         Text(stringResource(R.string.home_subtitle), style = MaterialTheme.typography.bodyLarge)
         ProtectionHeroCard(accessibilityEnabled = accessibilityEnabled, blockingEnabled = preferences.blockingEnabled)
         ReelsWarningCard()
+        StatisticsCard(preferences.dailyStats)
         ServiceStatusCard(accessibilityEnabled, onOpenAccessibility)
         SetupChecklistCard(
             accessibilityEnabled = accessibilityEnabled,
@@ -571,6 +576,99 @@ private fun ProtectedBlockingSwitch(
 }
 
 @Composable
+private fun StatisticsCard(stats: List<DailyStat>) {
+    val today = LocalDate.now()
+    val lastSevenDays = (6 downTo 0).map { offset ->
+        val date = today.minusDays(offset.toLong())
+        stats.firstOrNull { it.date == date.toString() } ?: DailyStat(date.toString())
+    }
+    val weekBlocked = lastSevenDays.sumOf { it.blocked }
+    val weekSavedSeconds = lastSevenDays.sumOf { it.savedSeconds }
+    val streak = protectedStreak(stats, today)
+    val maximum = lastSevenDays.maxOfOrNull { it.blocked }?.coerceAtLeast(1) ?: 1
+    val chartDescription = stringResource(R.string.statistics_chart_description)
+
+    Card {
+        Column(modifier = Modifier.padding(16.dp)) {
+            Text(
+                stringResource(R.string.statistics_title),
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.SemiBold,
+            )
+            Spacer(Modifier.height(10.dp))
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.fillMaxWidth()) {
+                StatisticMetric(
+                    modifier = Modifier.weight(1f),
+                    value = weekBlocked.toString(),
+                    label = stringResource(R.string.statistics_reels_blocked),
+                )
+                StatisticMetric(
+                    modifier = Modifier.weight(1f),
+                    value = formatSavedTime(weekSavedSeconds),
+                    label = stringResource(R.string.statistics_time_saved),
+                )
+                StatisticMetric(
+                    modifier = Modifier.weight(1f),
+                    value = streak.toString(),
+                    label = stringResource(R.string.statistics_streak),
+                )
+            }
+            Spacer(Modifier.height(16.dp))
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .semantics { contentDescription = chartDescription },
+                horizontalArrangement = Arrangement.spacedBy(6.dp),
+                verticalAlignment = Alignment.Bottom,
+            ) {
+                lastSevenDays.forEach { day ->
+                    Column(
+                        modifier = Modifier.weight(1f),
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                    ) {
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height((20 + (day.blocked.toFloat() / maximum * 56)).dp)
+                                .background(
+                                    color = MaterialTheme.colorScheme.primary,
+                                    shape = RoundedCornerShape(6.dp),
+                                ),
+                        )
+                        Spacer(Modifier.height(4.dp))
+                        Text(day.date.takeLast(2), style = MaterialTheme.typography.labelSmall)
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun StatisticMetric(modifier: Modifier, value: String, label: String) {
+    Column(modifier = modifier) {
+        Text(value, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
+        Text(label, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+    }
+}
+
+private fun protectedStreak(stats: List<DailyStat>, today: LocalDate): Int {
+    val byDate = stats.associateBy { it.date }
+    var date = today
+    var streak = 0
+    while ((byDate[date.toString()]?.blocked ?: 0) > 0) {
+        streak++
+        date = date.minusDays(1)
+    }
+    return streak
+}
+
+private fun formatSavedTime(seconds: Long): String {
+    val minutes = seconds / 60
+    return if (minutes > 0) "${minutes}m" else "${seconds}s"
+}
+
+@Composable
 private fun SettingsScreen(
     modifier: Modifier,
     preferences: AppPreferences,
@@ -579,11 +677,11 @@ private fun SettingsScreen(
     onReelsTabChanged: (Boolean) -> Unit,
     onShortcutsChanged: (Boolean) -> Unit,
     onTemporaryChanged: (Boolean) -> Unit,
+    onStrictModeChanged: (Boolean) -> Unit,
     onDurationChanged: (Int) -> Unit,
     onUnlockDelayChanged: (Int) -> Unit,
     onStoriesChanged: (Boolean) -> Unit,
     onNormalVideosChanged: (Boolean) -> Unit,
-    onPrivateMediaChanged: (Boolean) -> Unit,
     onDiagnosticChanged: (Boolean) -> Unit,
     onScheduleChanged: (Boolean) -> Unit,
     onScheduleStartChanged: (Int) -> Unit,
@@ -615,9 +713,9 @@ private fun SettingsScreen(
         SettingSwitchRow(stringResource(R.string.reels_tab_title), stringResource(R.string.reels_tab_summary), preferences.blockReelsTab, onReelsTabChanged)
         SettingSwitchRow(stringResource(R.string.shortcuts_title), stringResource(R.string.shortcuts_summary), preferences.blockShortcuts, onShortcutsChanged)
         SettingSwitchRow(stringResource(R.string.temporary_title), stringResource(R.string.temporary_summary), preferences.temporaryUnlockEnabled, onTemporaryChanged)
+        SettingSwitchRow(stringResource(R.string.strict_mode_title), stringResource(R.string.strict_mode_summary), preferences.strictMode, onStrictModeChanged)
         SettingSwitchRow(stringResource(R.string.stories_title), stringResource(R.string.stories_summary), preferences.blockStories, onStoriesChanged)
         SettingSwitchRow(stringResource(R.string.normal_videos_title), stringResource(R.string.normal_videos_summary), preferences.blockNormalVideos, onNormalVideosChanged)
-        SettingSwitchRow(stringResource(R.string.private_media_title), stringResource(R.string.private_media_summary), preferences.allowPrivateMedia, onPrivateMediaChanged)
         SettingSwitchRow(stringResource(R.string.diagnostic_title), stringResource(R.string.diagnostic_summary), preferences.diagnosticMode, onDiagnosticChanged)
         SettingSwitchRow(stringResource(R.string.schedule_title), stringResource(R.string.schedule_summary), preferences.scheduleEnabled, onScheduleChanged)
         if (preferences.scheduleEnabled) {

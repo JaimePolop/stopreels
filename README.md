@@ -13,7 +13,7 @@ The project includes:
 - An opaque overlay using `TYPE_ACCESSIBILITY_OVERLAY`, with a confirmable temporary unlock.
 - Pure, testable detection for the feed, the Reels tab, Direct messages, regular posts, stories, and screen changes.
 - No Internet permission, accounts, ads, analytics, or screenshots.
-- Copyright and the current proprietary licence documented in [COPYRIGHT.md](COPYRIGHT.md) and [LICENSE](LICENSE).
+- Apache-2.0 source licence documented in [COPYRIGHT.md](COPYRIGHT.md) and [LICENSE](LICENSE).
 
 ## Build
 
@@ -60,7 +60,7 @@ The exact names vary between MIUI/HyperOS versions. The application includes but
 
 `ReelDetectionEngine` works on a small copy of the accessibility hierarchy from the active window. It looks for explicit Reel signals in text, content descriptions, or `viewIdResourceName`, and uses the lower position of an element to identify shortcuts.
 
-Before blocking, it calculates private-context signals: Direct, messages, chat, conversation, the message composer, and their equivalents in other supported languages. If there are two conversation signals, or one conversation signal together with an editable message field, the context is treated as private and no overlay is created, even if the shared video mentions a Reel.
+Before blocking, it calculates private-context signals: Direct, messages, chat, conversation, the message composer, shared-media labels, and thread/container resource IDs in other supported languages. A strong conversation or shared-media signal is enough to keep the context private; the global Direct navigation label by itself is intentionally not enough. No overlay is created even if the shared video mentions a Reel.
 
 A generic video without a Reel signal is not blocked. This reduces false positives on regular posts, but it means Instagram may show a Reel that exposes no recognisable accessibility signal.
 

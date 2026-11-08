@@ -4,6 +4,7 @@ import android.content.Context
 import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.longPreferencesKey
+import androidx.datastore.preferences.core.MutablePreferences
 import androidx.datastore.preferences.preferencesDataStore
 import androidx.datastore.preferences.core.intPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
@@ -11,6 +12,14 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.map
 import java.io.IOException
+import java.time.LocalDate
+
+data class DailyStat(
+    val date: String,
+    val blocked: Int = 0,
+    val temporaryUnlocks: Int = 0,
+    val savedSeconds: Long = 0L,
+)
 
 private val Context.stopReelsDataStore by preferencesDataStore(name = "stopreels_preferences")
 
@@ -22,11 +31,11 @@ data class AppPreferences(
     val blockReelsTab: Boolean = true,
     val blockShortcuts: Boolean = false,
     val temporaryUnlockEnabled: Boolean = true,
+    val strictMode: Boolean = false,
     val unlockDurationSeconds: Int = 30,
     val unlockDelaySeconds: Int = 5,
     val blockStories: Boolean = false,
     val blockNormalVideos: Boolean = false,
-    val allowPrivateMedia: Boolean = true,
     val diagnosticMode: Boolean = false,
     val scheduleEnabled: Boolean = false,
     val scheduleStartHour: Int = 22,
@@ -36,6 +45,7 @@ data class AppPreferences(
     val dailyUsageDate: String = "",
     val blockedCount: Int = 0,
     val temporaryUnlockCount: Int = 0,
+    val dailyStats: List<DailyStat> = emptyList(),
 )
 
 class PreferencesRepository(private val context: Context) {
@@ -47,11 +57,11 @@ class PreferencesRepository(private val context: Context) {
         val blockReelsTab = booleanPreferencesKey("block_reels_tab")
         val blockShortcuts = booleanPreferencesKey("block_shortcuts")
         val temporaryUnlockEnabled = booleanPreferencesKey("temporary_unlock_enabled")
+        val strictMode = booleanPreferencesKey("strict_mode")
         val unlockDurationSeconds = intPreferencesKey("unlock_duration_seconds")
         val unlockDelaySeconds = intPreferencesKey("unlock_delay_seconds")
         val blockStories = booleanPreferencesKey("block_stories")
         val blockNormalVideos = booleanPreferencesKey("block_normal_videos")
-        val allowPrivateMedia = booleanPreferencesKey("allow_private_media")
         val diagnosticMode = booleanPreferencesKey("diagnostic_mode")
         val scheduleEnabled = booleanPreferencesKey("schedule_enabled")
         val scheduleStartHour = intPreferencesKey("schedule_start_hour")
@@ -61,6 +71,7 @@ class PreferencesRepository(private val context: Context) {
         val dailyUsageDate = stringPreferencesKey("daily_usage_date")
         val blockedCount = intPreferencesKey("blocked_count")
         val temporaryUnlockCount = intPreferencesKey("temporary_unlock_count")
+        val dailyStats = stringPreferencesKey("daily_stats")
     }
 
     val preferences: Flow<AppPreferences> = context.stopReelsDataStore.data
@@ -77,11 +88,11 @@ class PreferencesRepository(private val context: Context) {
                 blockReelsTab = values[Keys.blockReelsTab] ?: true,
                 blockShortcuts = values[Keys.blockShortcuts] ?: false,
                 temporaryUnlockEnabled = values[Keys.temporaryUnlockEnabled] ?: true,
+                strictMode = values[Keys.strictMode] ?: false,
                 unlockDurationSeconds = values[Keys.unlockDurationSeconds] ?: 30,
                 unlockDelaySeconds = (values[Keys.unlockDelaySeconds] ?: 5).coerceIn(1, 30),
                 blockStories = values[Keys.blockStories] ?: false,
                 blockNormalVideos = values[Keys.blockNormalVideos] ?: false,
-                allowPrivateMedia = values[Keys.allowPrivateMedia] ?: true,
                 diagnosticMode = values[Keys.diagnosticMode] ?: false,
                 scheduleEnabled = values[Keys.scheduleEnabled] ?: false,
                 scheduleStartHour = (values[Keys.scheduleStartHour] ?: 22).coerceIn(0, 23),
@@ -91,6 +102,7 @@ class PreferencesRepository(private val context: Context) {
                 dailyUsageDate = values[Keys.dailyUsageDate] ?: "",
                 blockedCount = values[Keys.blockedCount] ?: 0,
                 temporaryUnlockCount = values[Keys.temporaryUnlockCount] ?: 0,
+                dailyStats = decodeDailyStats(values[Keys.dailyStats].orEmpty()),
             )
         }
 
@@ -124,6 +136,10 @@ class PreferencesRepository(private val context: Context) {
         it[Keys.temporaryUnlockEnabled] = enabled
     }
 
+    suspend fun setStrictMode(enabled: Boolean) = context.stopReelsDataStore.edit {
+        it[Keys.strictMode] = enabled
+    }
+
     suspend fun setUnlockDurationSeconds(seconds: Int) = context.stopReelsDataStore.edit {
         it[Keys.unlockDurationSeconds] = seconds.coerceIn(15, 60)
     }
@@ -138,10 +154,6 @@ class PreferencesRepository(private val context: Context) {
 
     suspend fun setBlockNormalVideos(enabled: Boolean) = context.stopReelsDataStore.edit {
         it[Keys.blockNormalVideos] = enabled
-    }
-
-    suspend fun setAllowPrivateMedia(enabled: Boolean) = context.stopReelsDataStore.edit {
-        it[Keys.allowPrivateMedia] = enabled
     }
 
     suspend fun setDiagnosticMode(enabled: Boolean) = context.stopReelsDataStore.edit {
@@ -176,14 +188,61 @@ class PreferencesRepository(private val context: Context) {
 
     suspend fun incrementBlockedCount() = context.stopReelsDataStore.edit {
         it[Keys.blockedCount] = (it[Keys.blockedCount] ?: 0) + 1
+        updateDailyStat(it, blockedDelta = 1, savedSecondsDelta = ESTIMATED_SECONDS_SAVED_PER_BLOCK)
     }
 
     suspend fun incrementTemporaryUnlockCount() = context.stopReelsDataStore.edit {
         it[Keys.temporaryUnlockCount] = (it[Keys.temporaryUnlockCount] ?: 0) + 1
+        updateDailyStat(it, unlockDelta = 1)
     }
 
     suspend fun resetStatistics() = context.stopReelsDataStore.edit {
         it[Keys.blockedCount] = 0
         it[Keys.temporaryUnlockCount] = 0
+        it[Keys.dailyStats] = ""
+    }
+
+    private fun updateDailyStat(
+        values: MutablePreferences,
+        blockedDelta: Int = 0,
+        unlockDelta: Int = 0,
+        savedSecondsDelta: Long = 0L,
+    ) {
+        val today = LocalDate.now().toString()
+        val stats = decodeDailyStats(values[Keys.dailyStats].orEmpty()).toMutableList()
+        val current = stats.firstOrNull { it.date == today }
+            ?: DailyStat(date = today)
+        val updated = current.copy(
+            blocked = (current.blocked + blockedDelta).coerceAtLeast(0),
+            temporaryUnlocks = (current.temporaryUnlocks + unlockDelta).coerceAtLeast(0),
+            savedSeconds = (current.savedSeconds + savedSecondsDelta).coerceAtLeast(0L),
+        )
+        stats.removeAll { it.date == today }
+        stats += updated
+        values[Keys.dailyStats] = encodeDailyStats(stats.sortedByDescending(DailyStat::date).take(MAX_DAILY_STATS))
+    }
+
+    private fun encodeDailyStats(stats: List<DailyStat>): String = stats.joinToString(";") {
+        listOf(it.date, it.blocked, it.temporaryUnlocks, it.savedSeconds).joinToString(",")
+    }
+
+    private fun decodeDailyStats(encoded: String): List<DailyStat> = encoded
+        .split(';')
+        .mapNotNull { row ->
+            val fields = row.split(',')
+            if (fields.size != 4) return@mapNotNull null
+            val date = fields[0]
+            if (date.isBlank()) return@mapNotNull null
+            DailyStat(
+                date = date,
+                blocked = fields[1].toIntOrNull()?.coerceAtLeast(0) ?: return@mapNotNull null,
+                temporaryUnlocks = fields[2].toIntOrNull()?.coerceAtLeast(0) ?: return@mapNotNull null,
+                savedSeconds = fields[3].toLongOrNull()?.coerceAtLeast(0L) ?: return@mapNotNull null,
+            )
+        }
+
+    private companion object {
+        const val ESTIMATED_SECONDS_SAVED_PER_BLOCK = 30L
+        const val MAX_DAILY_STATS = 90
     }
 }

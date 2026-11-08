@@ -124,6 +124,62 @@ class ReelDetectionTest {
     }
 
     @Test
+    fun sharedReelWithPartialDirectHierarchyIsNotBlocked() {
+        // Some Instagram versions expose only the message container id and the
+        // media node when a shared Reel is opened from a conversation.
+        val root = node(
+            children = listOf(
+                node(viewId = "com.instagram.android:id/thread_message_container"),
+                node(
+                    viewId = "com.instagram.android:id/shared_media",
+                    contentDescription = "Reel de Ana",
+                    className = "android.view.SurfaceView",
+                    bounds = ScreenRect(0, 200, 1080, 2_200),
+                ),
+            ),
+        )
+
+        val result = ReelDetectionEngine.detect(root, DetectionPreferences())
+
+        assertFalse(result.shouldBlock)
+        assertTrue(result.isPrivateContext)
+    }
+
+    @Test
+    fun sharedPhotoWithMessageResourceIdIsNotBlocked() {
+        val root = node(
+            children = listOf(
+                node(viewId = "com.instagram.android:id/message_thread"),
+                node(
+                    viewId = "com.instagram.android:id/message_media",
+                    contentDescription = "Photo de Ana",
+                    className = "android.widget.ImageView",
+                    bounds = ScreenRect(80, 500, 1_000, 1_500),
+                ),
+            ),
+        )
+
+        val result = ReelDetectionEngine.detect(root, DetectionPreferences())
+
+        assertFalse(result.shouldBlock)
+        assertTrue(result.isPrivateContext)
+    }
+
+    @Test
+    fun sharedEnglishMediaLabelIsNotBlockedWithoutConversationTitle() {
+        val root = node(
+            children = listOf(
+                node(contentDescription = "Shared Reel by Ana", bounds = ScreenRect(80, 500, 1_000, 1_500)),
+            ),
+        )
+
+        val result = ReelDetectionEngine.detect(root, DetectionPreferences())
+
+        assertFalse(result.shouldBlock)
+        assertTrue(result.isPrivateContext)
+    }
+
+    @Test
     fun globalDirectNavigationLabelsDoNotDisableFeedBlocking() {
         val root = node(
             children = listOf(

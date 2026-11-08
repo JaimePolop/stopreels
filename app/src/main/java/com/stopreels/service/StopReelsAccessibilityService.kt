@@ -189,13 +189,15 @@ class StopReelsAccessibilityService : AccessibilityService() {
                 blockShortcuts = preferences.blockShortcuts,
                 blockStories = preferences.blockStories,
                 blockNormalVideos = preferences.blockNormalVideos,
-                allowPrivateMedia = preferences.allowPrivateMedia,
                 diagnosticMode = preferences.diagnosticMode,
             ),
         )
 
         if (!result.shouldBlock) {
-            clearIfDetectionExpired()
+            // A Direct/chat result is authoritative. Keeping the old overlay for
+            // the normal anti-flicker grace period would briefly cover a Reel or
+            // photo that a friend just sent in a conversation.
+            if (result.isPrivateContext) clearOverlays() else clearIfDetectionExpired()
             return
         }
 
@@ -220,7 +222,7 @@ class StopReelsAccessibilityService : AccessibilityService() {
             target = target,
             durationSeconds = currentPreferences.unlockDurationSeconds,
             delaySeconds = currentPreferences.unlockDelaySeconds,
-            canUnlock = currentPreferences.temporaryUnlockEnabled,
+            canUnlock = currentPreferences.temporaryUnlockEnabled && !currentPreferences.strictMode,
             diagnosticMode = currentPreferences.diagnosticMode,
             onUnlock = { requestTemporaryUnlock(currentPreferences.unlockDurationSeconds) },
             onExit = { performGlobalAction(GLOBAL_ACTION_HOME) },
@@ -278,7 +280,7 @@ class StopReelsAccessibilityService : AccessibilityService() {
     }
 
     private fun requestTemporaryUnlock(durationSeconds: Int) {
-        if (!preferences.temporaryUnlockEnabled) return
+        if (!preferences.temporaryUnlockEnabled || preferences.strictMode) return
         val today = LocalDate.now().toString()
         val usedToday = if (preferences.dailyUsageDate == today) preferences.dailyUnlockedSeconds else 0L
         val dailyLimitSeconds = preferences.dailyLimitMinutes * 60L
