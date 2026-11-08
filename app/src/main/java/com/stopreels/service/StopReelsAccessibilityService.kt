@@ -11,6 +11,7 @@ import android.os.Handler
 import android.os.Looper
 import android.os.SystemClock
 import android.os.CountDownTimer
+import android.util.Log
 import android.view.Gravity
 import android.view.View
 import android.view.WindowManager
@@ -62,6 +63,7 @@ class StopReelsAccessibilityService : AccessibilityService() {
 
     private companion object {
         const val DETECTION_GRACE_MS = 3_000L
+        const val TAG = "StopReelsService"
     }
 
     private val processRunnable = Runnable { processActiveWindow() }
@@ -142,6 +144,17 @@ class StopReelsAccessibilityService : AccessibilityService() {
     }
 
     private fun processActiveWindow() {
+        try {
+            processActiveWindowSafely()
+        } catch (error: RuntimeException) {
+            // A broken node or OEM WindowManager transition must not kill the
+            // accessibility service. The next heartbeat will retry detection.
+            Log.e(TAG, "Recoverable error while processing Instagram", error)
+            clearOverlays()
+        }
+    }
+
+    private fun processActiveWindowSafely() {
         if (!::windowManager.isInitialized || lastPackage != INSTAGRAM_PACKAGE) return
         if (!preferences.blockingEnabled || SystemClock.uptimeMillis() < unlockedUntilUptime) {
             clearOverlays()
@@ -321,8 +334,9 @@ class StopReelsAccessibilityService : AccessibilityService() {
         currentOverlays.forEach { (view, _) ->
             try {
                 windowManager.removeView(view)
-            } catch (_: IllegalArgumentException) {
-                // Already removed by Android during a configuration change.
+            } catch (_: RuntimeException) {
+                // The view may already be detached by Android or an OEM during
+                // rotation/window transitions. Never let that kill the service.
             }
         }
         currentOverlays.clear()
