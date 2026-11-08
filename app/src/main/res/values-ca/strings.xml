@@ -1,6 +1,29 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">StopReels</string>
+    <string name="diagnostic_overlay">Diagnòstic: %1$s · %2$d%% · %3$s</string>
+    <string name="service_enabled_unlinked">Servei no connectat</string>
+    <string name="service_unlinked_description">L’accessibilitat està activada, però Android encara no ha connectat StopReels. Toca reintenta o torna a obrir Accessibilitat.</string>
+    <string name="service_last_error">Últim error tècnic: %1$s</string>
+    <string name="retry_service">Reintenta el servei</string>
+    <string name="protection_service_reconnecting">Accessibilitat activada; esperant que es connecti el servei</string>
+    <string name="diagnostic_details_title">Diagnòstic de detecció</string>
+    <string name="diagnostic_app">Aplicació: %1$s</string>
+    <string name="diagnostic_service">Servei: %1$s</string>
+    <string name="diagnostic_screen">Pantalla: %1$s</string>
+    <string name="diagnostic_target">Objectiu: %1$s</string>
+    <string name="diagnostic_confidence">Confiança: %1$d%%</string>
+    <string name="diagnostic_reason">Motiu: %1$s</string>
+    <string name="diagnostic_none">Cap</string>
+    <string name="diagnostic_copy">Copia l’informe anonimitzat</string>
+    <string name="diagnostic_copied">Informe de diagnòstic copiat</string>
+    <string name="diagnostic_reason_search">Pantalla de cerca</string>
+    <string name="diagnostic_reason_private">Conversa privada</string>
+    <string name="diagnostic_reason_reels_surface">Superfície del visor de Reels</string>
+    <string name="diagnostic_reason_reel_signal">Senyal explícit de Reel</string>
+    <string name="diagnostic_reason_normal_video">Senyal de vídeo normal</string>
+    <string name="diagnostic_reason_story">Senyal d’història</string>
+    <string name="diagnostic_reason_none">Sense objectiu de bloqueig</string>
     <string name="startup_body">Preparant la teva pausa digital…</string>
     <string name="blocked_overlay_title">Reel bloquejat</string>
     <string name="overlay_exit">Sortir d’Instagram</string>

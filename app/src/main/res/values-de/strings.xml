@@ -1,6 +1,29 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">StopReels</string>
+    <string name="diagnostic_overlay">Diagnose: %1$s · %2$d%% · %3$s</string>
+    <string name="service_enabled_unlinked">Dienst nicht verbunden</string>
+    <string name="service_unlinked_description">Bedienungshilfen sind aktiviert, aber Android hat StopReels noch nicht verbunden. Tippe auf „Dienst erneut versuchen“ oder öffne die Bedienungshilfen erneut.</string>
+    <string name="service_last_error">Letzter technischer Fehler: %1$s</string>
+    <string name="retry_service">Dienst erneut versuchen</string>
+    <string name="protection_service_reconnecting">Bedienungshilfen aktiviert; Verbindung zum Dienst wird erwartet</string>
+    <string name="diagnostic_details_title">Erkennungsdiagnose</string>
+    <string name="diagnostic_app">App: %1$s</string>
+    <string name="diagnostic_service">Dienst: %1$s</string>
+    <string name="diagnostic_screen">Bildschirm: %1$s</string>
+    <string name="diagnostic_target">Ziel: %1$s</string>
+    <string name="diagnostic_confidence">Sicherheit: %1$d%%</string>
+    <string name="diagnostic_reason">Grund: %1$s</string>
+    <string name="diagnostic_none">Keine</string>
+    <string name="diagnostic_copy">Anonymisierten Bericht kopieren</string>
+    <string name="diagnostic_copied">Diagnosebericht kopiert</string>
+    <string name="diagnostic_reason_search">Suchbildschirm</string>
+    <string name="diagnostic_reason_private">Private Unterhaltung</string>
+    <string name="diagnostic_reason_reels_surface">Reels-Viewer</string>
+    <string name="diagnostic_reason_reel_signal">Explizites Reel-Signal</string>
+    <string name="diagnostic_reason_normal_video">Normales Videosignal</string>
+    <string name="diagnostic_reason_story">Story-Signal</string>
+    <string name="diagnostic_reason_none">Kein Blockierungsziel</string>
     <string name="startup_body">Digitale Pause wird vorbereitet…</string>
     <string name="blocked_overlay_title">Reel blockiert</string>
     <string name="overlay_exit">Instagram verlassen</string>

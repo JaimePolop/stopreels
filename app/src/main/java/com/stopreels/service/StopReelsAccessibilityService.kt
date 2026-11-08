@@ -29,6 +29,7 @@ import com.stopreels.domain.AccessibilityNodeSnapshot
 import com.stopreels.domain.BlockTarget
 import com.stopreels.domain.BlockTargetKind
 import com.stopreels.domain.DetectionPreferences
+import com.stopreels.domain.DetectionReason
 import com.stopreels.domain.INSTAGRAM_PACKAGE
 import com.stopreels.domain.ReelDetectionEngine
 import com.stopreels.domain.ScreenRect
@@ -69,16 +70,18 @@ class StopReelsAccessibilityService : AccessibilityService() {
     private val processRunnable = Runnable { processActiveWindow() }
     private val heartbeatRunnable = object : Runnable {
         override fun run() {
+            ServiceRuntimeStatusStore.markHeartbeat(this@StopReelsAccessibilityService)
             if (lastPackage == INSTAGRAM_PACKAGE) {
                 processActiveWindow()
-                mainHandler.postDelayed(this, 700L)
             }
+            mainHandler.postDelayed(this, 700L)
         }
     }
 
     override fun onServiceConnected() {
         super.onServiceConnected()
         windowManager = getSystemService(WINDOW_SERVICE) as WindowManager
+        ServiceRuntimeStatusStore.markConnected(this)
         serviceInfo = serviceInfo.apply {
             eventTypes = AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED or
                 AccessibilityEvent.TYPE_WINDOW_CONTENT_CHANGED or
@@ -90,6 +93,8 @@ class StopReelsAccessibilityService : AccessibilityService() {
                 AccessibilityServiceInfo.FLAG_RETRIEVE_INTERACTIVE_WINDOWS or
                 AccessibilityServiceInfo.FLAG_REPORT_VIEW_IDS
         }
+        mainHandler.removeCallbacks(heartbeatRunnable)
+        mainHandler.postDelayed(heartbeatRunnable, 700L)
         serviceScope.launch {
             (application as StopReelsApplication).preferencesRepository.preferences.collectLatest {
                 preferences = it
@@ -128,6 +133,7 @@ class StopReelsAccessibilityService : AccessibilityService() {
     override fun onInterrupt() {
         mainHandler.removeCallbacks(heartbeatRunnable)
         clearOverlays()
+        ServiceRuntimeStatusStore.markStopped(this)
     }
 
     override fun onDestroy() {
@@ -135,6 +141,7 @@ class StopReelsAccessibilityService : AccessibilityService() {
         mainHandler.removeCallbacks(heartbeatRunnable)
         clearOverlays()
         serviceScope.cancel()
+        ServiceRuntimeStatusStore.markStopped(this)
         super.onDestroy()
     }
 
@@ -150,6 +157,7 @@ class StopReelsAccessibilityService : AccessibilityService() {
             // A broken node or OEM WindowManager transition must not kill the
             // accessibility service. The next heartbeat will retry detection.
             Log.e(TAG, "Recoverable error while processing Instagram", error)
+            ServiceRuntimeStatusStore.recordError(this, error)
             clearOverlays()
         }
     }
@@ -198,6 +206,14 @@ class StopReelsAccessibilityService : AccessibilityService() {
                 diagnosticMode = preferences.diagnosticMode,
             ),
         )
+        ServiceRuntimeStatusStore.recordDetection(
+            context = this,
+            activePackage = rootPackage,
+            screen = result.screen.name,
+            targetKind = result.targets.firstOrNull()?.kind?.name,
+            confidence = result.confidence,
+            reason = result.reason.name,
+        )
 
         if (!result.shouldBlock) {
             // A Direct/chat result is authoritative. Keeping the old overlay for
@@ -216,7 +232,14 @@ class StopReelsAccessibilityService : AccessibilityService() {
             return
         }
         clearOverlays()
-        result.targets.forEach { target -> addBlockingOverlay(target, preferences) }
+        result.targets.forEach { target ->
+            addBlockingOverlay(
+                target = target,
+                currentPreferences = preferences,
+                confidence = result.confidence,
+                reason = result.reason,
+            )
+        }
         lastOverlayKey = newKey
 
         if (newKey != lastCountedKey && result.targets.any { it.kind != BlockTargetKind.STORY }) {
@@ -227,7 +250,12 @@ class StopReelsAccessibilityService : AccessibilityService() {
         }
     }
 
-    private fun addBlockingOverlay(target: BlockTarget, currentPreferences: AppPreferences) {
+    private fun addBlockingOverlay(
+        target: BlockTarget,
+        currentPreferences: AppPreferences,
+        confidence: Int,
+        reason: DetectionReason,
+    ) {
         val view = BlockOverlayView(
             context = localizedOverlayContext(),
             target = target,
@@ -235,6 +263,8 @@ class StopReelsAccessibilityService : AccessibilityService() {
             delaySeconds = currentPreferences.unlockDelaySeconds,
             canUnlock = currentPreferences.temporaryUnlockEnabled && !currentPreferences.strictMode,
             diagnosticMode = currentPreferences.diagnosticMode,
+            confidence = confidence,
+            reason = localizedDetectionReason(reason),
             onUnlock = { requestTemporaryUnlock(currentPreferences.unlockDurationSeconds) },
             onExit = { performGlobalAction(GLOBAL_ACTION_HOME) },
         )
@@ -268,6 +298,20 @@ class StopReelsAccessibilityService : AccessibilityService() {
         val configuration = Configuration(resources.configuration)
         configuration.setLocale(Locale.forLanguageTag(languageTag))
         return createConfigurationContext(configuration)
+    }
+
+    private fun localizedDetectionReason(reason: DetectionReason): String {
+        val context = localizedOverlayContext()
+        val resource = when (reason) {
+            DetectionReason.SEARCH_SCREEN -> R.string.diagnostic_reason_search
+            DetectionReason.PRIVATE_CONTEXT -> R.string.diagnostic_reason_private
+            DetectionReason.REELS_ROUTE_AND_SURFACE -> R.string.diagnostic_reason_reels_surface
+            DetectionReason.EXPLICIT_REEL_SIGNAL -> R.string.diagnostic_reason_reel_signal
+            DetectionReason.NORMAL_VIDEO_SIGNAL -> R.string.diagnostic_reason_normal_video
+            DetectionReason.STORY_SIGNAL -> R.string.diagnostic_reason_story
+            DetectionReason.NONE -> R.string.diagnostic_reason_none
+        }
+        return context.getString(resource)
     }
 
     private fun overlayBounds(bounds: ScreenRect): ScreenRect {
@@ -388,6 +432,8 @@ private class BlockOverlayView(
     private val delaySeconds: Int,
     private val canUnlock: Boolean,
     private val diagnosticMode: Boolean,
+    private val confidence: Int,
+    private val reason: String,
     private val onUnlock: () -> Unit,
     private val onExit: () -> Unit,
 ) : FrameLayout(context) {
@@ -448,7 +494,12 @@ private class BlockOverlayView(
 
         if (diagnosticMode) {
             TextView(context).also { diagnostic ->
-                diagnostic.text = context.getString(R.string.diagnostic_overlay, target.kind.name)
+                diagnostic.text = context.getString(
+                    R.string.diagnostic_overlay,
+                    target.kind.name,
+                    confidence,
+                    reason,
+                )
                 diagnostic.textSize = 11f
                 diagnostic.setTextColor(overlayTextColor)
                 diagnostic.gravity = Gravity.CENTER

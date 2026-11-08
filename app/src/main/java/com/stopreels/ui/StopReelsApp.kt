@@ -2,6 +2,8 @@ package com.stopreels.ui
 
 import android.accessibilityservice.AccessibilityServiceInfo
 import android.content.ActivityNotFoundException
+import android.content.ClipData
+import android.content.ClipboardManager
 import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
@@ -91,6 +93,8 @@ import com.stopreels.R
 import com.stopreels.StopReelsViewModel
 import com.stopreels.data.AppPreferences
 import com.stopreels.data.DailyStat
+import com.stopreels.service.ServiceRuntimeState
+import com.stopreels.service.ServiceRuntimeStatusStore
 import com.stopreels.service.StopReelsAccessibilityService
 import kotlinx.coroutines.delay
 import java.time.LocalDate
@@ -104,12 +108,21 @@ private enum class AppSection(val labelRes: Int) {
 private const val ACTION_ACCESSIBILITY_DETAILS_SETTINGS =
     "android.settings.ACCESSIBILITY_DETAILS_SETTINGS"
 
+private data class ServiceUiStatus(
+    val accessibilityEnabled: Boolean,
+    val runtime: ServiceRuntimeState,
+) {
+    fun isConnected(now: Long = System.currentTimeMillis()): Boolean =
+        accessibilityEnabled && runtime.heartbeatAtMillis > 0L &&
+            now - runtime.heartbeatAtMillis in 0L..2_500L
+}
+
 @Composable
 @OptIn(ExperimentalMaterial3Api::class)
 fun StopReelsApp(viewModel: StopReelsViewModel) {
     val preferences by viewModel.preferences.collectAsStateWithLifecycle()
     val context = LocalContext.current
-    var accessibilityEnabled by rememberAccessibilityEnabled(context)
+    val serviceStatus by rememberServiceStatus(context)
     var section by rememberSaveable { mutableStateOf(AppSection.HOME) }
     val xiaomiFamily = remember { isXiaomiFamily() }
     var showStartup by rememberSaveable { mutableStateOf(true) }
@@ -185,7 +198,9 @@ fun StopReelsApp(viewModel: StopReelsViewModel) {
                 AppSection.HOME -> HomeScreen(
                     modifier = Modifier.padding(paddingValues),
                     preferences = preferences,
-                    accessibilityEnabled = accessibilityEnabled,
+                    accessibilityEnabled = serviceStatus.accessibilityEnabled,
+                    serviceConnected = serviceStatus.isConnected(),
+                    runtime = serviceStatus.runtime,
                     xiaomiFamily = xiaomiFamily,
                     onBlockingChanged = viewModel::setBlockingEnabled,
                     onOpenAccessibility = {
@@ -336,6 +351,8 @@ private fun HomeScreen(
     modifier: Modifier,
     preferences: AppPreferences,
     accessibilityEnabled: Boolean,
+    serviceConnected: Boolean,
+    runtime: ServiceRuntimeState,
     xiaomiFamily: Boolean,
     onBlockingChanged: (Boolean) -> Unit,
     onOpenAccessibility: () -> Unit,
@@ -349,10 +366,26 @@ private fun HomeScreen(
     ) {
         Text(stringResource(R.string.home_title), style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold)
         Text(stringResource(R.string.home_subtitle), style = MaterialTheme.typography.bodyLarge)
-        ProtectionHeroCard(accessibilityEnabled = accessibilityEnabled, blockingEnabled = preferences.blockingEnabled)
+        ProtectionHeroCard(
+            accessibilityEnabled = accessibilityEnabled,
+            serviceConnected = serviceConnected,
+            blockingEnabled = preferences.blockingEnabled,
+        )
         ReelsWarningCard()
         StatisticsCard(preferences.dailyStats)
-        ServiceStatusCard(accessibilityEnabled, onOpenAccessibility)
+        ServiceStatusCard(
+            accessibilityEnabled = accessibilityEnabled,
+            serviceConnected = serviceConnected,
+            lastError = runtime.lastError,
+            onOpenAccessibility = onOpenAccessibility,
+        )
+        if (preferences.diagnosticMode) {
+            DiagnosticCard(
+                runtime = runtime,
+                accessibilityEnabled = accessibilityEnabled,
+                serviceConnected = serviceConnected,
+            )
+        }
         SetupChecklistCard(
             accessibilityEnabled = accessibilityEnabled,
             xiaomiFamily = xiaomiFamily,
@@ -381,7 +414,11 @@ private fun HomeScreen(
 }
 
 @Composable
-private fun ProtectionHeroCard(accessibilityEnabled: Boolean, blockingEnabled: Boolean) {
+private fun ProtectionHeroCard(
+    accessibilityEnabled: Boolean,
+    serviceConnected: Boolean,
+    blockingEnabled: Boolean,
+) {
     Card(colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer)) {
         Row(
             modifier = Modifier
@@ -406,7 +443,11 @@ private fun ProtectionHeroCard(accessibilityEnabled: Boolean, blockingEnabled: B
                 )
                 Text(
                     text = stringResource(
-                        if (accessibilityEnabled) R.string.protection_ready else R.string.protection_needs_accessibility,
+                        when {
+                            !accessibilityEnabled -> R.string.protection_needs_accessibility
+                            !serviceConnected -> R.string.protection_service_reconnecting
+                            else -> R.string.protection_ready
+                        },
                     ),
                     style = MaterialTheme.typography.bodySmall,
                 )
@@ -894,10 +935,18 @@ private fun HelpScreen(modifier: Modifier, xiaomiFamily: Boolean) {
 }
 
 @Composable
-private fun ServiceStatusCard(accessibilityEnabled: Boolean, onOpenAccessibility: () -> Unit) {
+private fun ServiceStatusCard(
+    accessibilityEnabled: Boolean,
+    serviceConnected: Boolean,
+    lastError: String?,
+    onOpenAccessibility: () -> Unit,
+) {
+    val connected = accessibilityEnabled && serviceConnected
     val statusColor by animateColorAsState(
-        targetValue = if (accessibilityEnabled) {
+        targetValue = if (connected) {
             MaterialTheme.colorScheme.primaryContainer
+        } else if (accessibilityEnabled) {
+            MaterialTheme.colorScheme.tertiaryContainer
         } else {
             MaterialTheme.colorScheme.surfaceVariant
         },
@@ -911,15 +960,17 @@ private fun ServiceStatusCard(accessibilityEnabled: Boolean, onOpenAccessibility
             verticalAlignment = Alignment.CenterVertically,
         ) {
             AnimatedContent(
-                targetState = accessibilityEnabled,
+                targetState = connected,
                 transitionSpec = { fadeIn() togetherWith fadeOut() },
                 label = "service_status_icon",
-            ) { enabled ->
+            ) { active ->
                 Icon(
-                    imageVector = if (enabled) Icons.Outlined.CheckCircle else Icons.Outlined.AccessibilityNew,
+                    imageVector = if (active) Icons.Outlined.CheckCircle else Icons.Outlined.AccessibilityNew,
                     contentDescription = null,
-                    tint = if (enabled) {
+                    tint = if (connected) {
                         MaterialTheme.colorScheme.onPrimaryContainer
+                    } else if (accessibilityEnabled) {
+                        MaterialTheme.colorScheme.onTertiaryContainer
                     } else {
                         MaterialTheme.colorScheme.onSurfaceVariant
                     },
@@ -928,19 +979,104 @@ private fun ServiceStatusCard(accessibilityEnabled: Boolean, onOpenAccessibility
             Spacer(Modifier.width(12.dp))
             Column(modifier = Modifier.weight(1f)) {
                 Text(
-                    text = stringResource(if (accessibilityEnabled) R.string.service_enabled else R.string.service_disabled),
+                    text = stringResource(
+                        when {
+                            !accessibilityEnabled -> R.string.service_disabled
+                            connected -> R.string.service_enabled
+                            else -> R.string.service_enabled_unlinked
+                        },
+                    ),
                     fontWeight = FontWeight.SemiBold,
                 )
                 Text(
-                    text = stringResource(if (accessibilityEnabled) R.string.service_enabled_description else R.string.service_disabled_description),
+                    text = stringResource(
+                        when {
+                            !accessibilityEnabled -> R.string.service_disabled_description
+                            connected -> R.string.service_enabled_description
+                            else -> R.string.service_unlinked_description
+                        },
+                    ),
                     style = MaterialTheme.typography.bodySmall,
                 )
+                if (!lastError.isNullOrBlank()) {
+                    Text(
+                        text = stringResource(R.string.service_last_error, lastError),
+                        style = MaterialTheme.typography.labelSmall,
+                    )
+                }
             }
-            if (!accessibilityEnabled) {
-                TextButton(onClick = onOpenAccessibility) { Text(stringResource(R.string.enable_accessibility)) }
+            if (!connected) {
+                TextButton(onClick = onOpenAccessibility) {
+                    Text(stringResource(if (accessibilityEnabled) R.string.retry_service else R.string.enable_accessibility))
+                }
             }
         }
     }
+}
+
+@Composable
+private fun DiagnosticCard(
+    runtime: ServiceRuntimeState,
+    accessibilityEnabled: Boolean,
+    serviceConnected: Boolean,
+) {
+    val context = LocalContext.current
+    val none = stringResource(R.string.diagnostic_none)
+    val reason = stringResource(diagnosticReasonResource(runtime.reason))
+    val serviceState = when {
+        !accessibilityEnabled -> stringResource(R.string.service_disabled)
+        serviceConnected -> stringResource(R.string.service_enabled)
+        else -> stringResource(R.string.service_enabled_unlinked)
+    }
+    val report = listOf(
+        "StopReels diagnostic",
+        context.getString(R.string.diagnostic_service, serviceState),
+        context.getString(R.string.diagnostic_app, runtime.activePackage ?: none),
+        context.getString(R.string.diagnostic_screen, runtime.screen ?: none),
+        context.getString(R.string.diagnostic_target, runtime.targetKind ?: none),
+        context.getString(R.string.diagnostic_confidence, runtime.confidence),
+        context.getString(R.string.diagnostic_reason, reason),
+        runtime.lastError?.let { context.getString(R.string.service_last_error, it) },
+    ).filterNotNull().joinToString("\n")
+    var copied by rememberSaveable(report) { mutableStateOf(false) }
+
+    Card {
+        Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+            Text(
+                stringResource(R.string.diagnostic_details_title),
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.SemiBold,
+            )
+            Text(stringResource(R.string.diagnostic_service, serviceState), style = MaterialTheme.typography.bodySmall)
+            Text(stringResource(R.string.diagnostic_app, runtime.activePackage ?: none), style = MaterialTheme.typography.bodySmall)
+            Text(stringResource(R.string.diagnostic_screen, runtime.screen ?: none), style = MaterialTheme.typography.bodySmall)
+            Text(stringResource(R.string.diagnostic_target, runtime.targetKind ?: none), style = MaterialTheme.typography.bodySmall)
+            Text(stringResource(R.string.diagnostic_confidence, runtime.confidence), style = MaterialTheme.typography.bodySmall)
+            Text(stringResource(R.string.diagnostic_reason, reason), style = MaterialTheme.typography.bodySmall)
+            if (!runtime.lastError.isNullOrBlank()) {
+                Text(stringResource(R.string.service_last_error, runtime.lastError), style = MaterialTheme.typography.bodySmall)
+            }
+            TextButton(
+                onClick = {
+                    val clipboard = context.getSystemService(ClipboardManager::class.java)
+                    clipboard?.setPrimaryClip(ClipData.newPlainText("StopReels diagnostic", report))
+                    copied = true
+                },
+            ) {
+                Text(stringResource(if (copied) R.string.diagnostic_copied else R.string.diagnostic_copy))
+            }
+        }
+    }
+}
+
+private fun diagnosticReasonResource(reason: String?): Int = when (reason) {
+    "SEARCH_SCREEN" -> R.string.diagnostic_reason_search
+    "PRIVATE_CONTEXT" -> R.string.diagnostic_reason_private
+    "REELS_ROUTE_AND_SURFACE" -> R.string.diagnostic_reason_reels_surface
+    "EXPLICIT_REEL_SIGNAL" -> R.string.diagnostic_reason_reel_signal
+    "NORMAL_VIDEO_SIGNAL" -> R.string.diagnostic_reason_normal_video
+    "STORY_SIGNAL" -> R.string.diagnostic_reason_story
+    else -> R.string.diagnostic_reason_none
 }
 
 @Composable
@@ -1038,20 +1174,38 @@ private fun BackgroundSetupCard(xiaomiFamily: Boolean) {
 }
 
 @Composable
-private fun rememberAccessibilityEnabled(context: Context): MutableState<Boolean> {
+private fun rememberServiceStatus(context: Context): MutableState<ServiceUiStatus> {
     val lifecycleOwner = LocalLifecycleOwner.current
-    val enabled = remember { mutableStateOf(isStopReelsAccessibilityEnabled(context)) }
+    val status = remember {
+        mutableStateOf(
+            ServiceUiStatus(
+                accessibilityEnabled = isStopReelsAccessibilityEnabled(context),
+                runtime = ServiceRuntimeStatusStore.read(context),
+            ),
+        )
+    }
+    fun refresh() {
+        status.value = ServiceUiStatus(
+            accessibilityEnabled = isStopReelsAccessibilityEnabled(context),
+            runtime = ServiceRuntimeStatusStore.read(context),
+        )
+    }
     DisposableEffect(lifecycleOwner, context) {
         val observer = LifecycleEventObserver { _, event ->
             if (event == Lifecycle.Event.ON_RESUME) {
-                enabled.value = isStopReelsAccessibilityEnabled(context)
+                refresh()
             }
         }
         lifecycleOwner.lifecycle.addObserver(observer)
         onDispose { lifecycleOwner.lifecycle.removeObserver(observer) }
     }
-    LaunchedEffect(Unit) { enabled.value = isStopReelsAccessibilityEnabled(context) }
-    return enabled
+    LaunchedEffect(context) {
+        while (true) {
+            refresh()
+            delay(1_000L)
+        }
+    }
+    return status
 }
 
 private fun isStopReelsAccessibilityEnabled(context: Context): Boolean {

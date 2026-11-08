@@ -1,6 +1,29 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">StopReels</string>
+    <string name="diagnostic_overlay">Diagnostic : %1$s · %2$d%% · %3$s</string>
+    <string name="service_enabled_unlinked">Service non connecté</string>
+    <string name="service_unlinked_description">L’accessibilité est activée, mais Android n’a pas encore connecté StopReels. Touchez Réessayer ou rouvrez l’accessibilité.</string>
+    <string name="service_last_error">Dernière erreur technique : %1$s</string>
+    <string name="retry_service">Réessayer le service</string>
+    <string name="protection_service_reconnecting">Accessibilité activée ; connexion au service en attente</string>
+    <string name="diagnostic_details_title">Diagnostic de détection</string>
+    <string name="diagnostic_app">Application : %1$s</string>
+    <string name="diagnostic_service">Service : %1$s</string>
+    <string name="diagnostic_screen">Écran : %1$s</string>
+    <string name="diagnostic_target">Cible : %1$s</string>
+    <string name="diagnostic_confidence">Confiance : %1$d%%</string>
+    <string name="diagnostic_reason">Motif : %1$s</string>
+    <string name="diagnostic_none">Aucune</string>
+    <string name="diagnostic_copy">Copier le rapport anonymisé</string>
+    <string name="diagnostic_copied">Rapport de diagnostic copié</string>
+    <string name="diagnostic_reason_search">Écran de recherche</string>
+    <string name="diagnostic_reason_private">Conversation privée</string>
+    <string name="diagnostic_reason_reels_surface">Lecteur de Reels</string>
+    <string name="diagnostic_reason_reel_signal">Signal explicite de Reel</string>
+    <string name="diagnostic_reason_normal_video">Signal de vidéo normale</string>
+    <string name="diagnostic_reason_story">Signal de story</string>
+    <string name="diagnostic_reason_none">Aucune cible de blocage</string>
     <string name="startup_body">Préparation de votre pause numérique…</string>
     <string name="blocked_overlay_title">Reel bloqué</string>
     <string name="overlay_exit">Quitter Instagram</string>

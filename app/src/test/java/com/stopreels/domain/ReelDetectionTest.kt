@@ -20,6 +20,8 @@ class ReelDetectionTest {
 
         assertTrue(result.shouldBlock)
         assertTrue(result.targets.any { it.kind == BlockTargetKind.FEED_REEL })
+        assertTrue(result.confidence >= 90)
+        assertTrue(result.reason == DetectionReason.EXPLICIT_REEL_SIGNAL)
     }
 
     @Test
@@ -122,7 +124,9 @@ class ReelDetectionTest {
             ),
         )
 
-        assertFalse(ReelDetectionEngine.detect(root, DetectionPreferences()).shouldBlock)
+        val result = ReelDetectionEngine.detect(root, DetectionPreferences())
+
+        assertFalse(result.shouldBlock)
     }
 
     @Test
@@ -246,7 +250,10 @@ class ReelDetectionTest {
             ),
         )
 
-        assertFalse(ReelDetectionEngine.detect(root, DetectionPreferences()).shouldBlock)
+        val result = ReelDetectionEngine.detect(root, DetectionPreferences())
+
+        assertFalse(result.shouldBlock)
+        assertTrue(result.reason == DetectionReason.SEARCH_SCREEN)
     }
 
     @Test

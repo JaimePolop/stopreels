@@ -1,6 +1,29 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">StopReels</string>
+    <string name="diagnostic_overlay">Diagnostica: %1$s · %2$d%% · %3$s</string>
+    <string name="service_enabled_unlinked">Servizio non connesso</string>
+    <string name="service_unlinked_description">L’accessibilità è attiva, ma Android non ha ancora collegato StopReels. Tocca Riprova o riapri Accessibilità.</string>
+    <string name="service_last_error">Ultimo errore tecnico: %1$s</string>
+    <string name="retry_service">Riprova servizio</string>
+    <string name="protection_service_reconnecting">Accessibilità attiva; in attesa della connessione del servizio</string>
+    <string name="diagnostic_details_title">Diagnostica del rilevamento</string>
+    <string name="diagnostic_app">App: %1$s</string>
+    <string name="diagnostic_service">Servizio: %1$s</string>
+    <string name="diagnostic_screen">Schermata: %1$s</string>
+    <string name="diagnostic_target">Obiettivo: %1$s</string>
+    <string name="diagnostic_confidence">Affidabilità: %1$d%%</string>
+    <string name="diagnostic_reason">Motivo: %1$s</string>
+    <string name="diagnostic_none">Nessuno</string>
+    <string name="diagnostic_copy">Copia rapporto anonimizzato</string>
+    <string name="diagnostic_copied">Rapporto diagnostico copiato</string>
+    <string name="diagnostic_reason_search">Schermata di ricerca</string>
+    <string name="diagnostic_reason_private">Conversazione privata</string>
+    <string name="diagnostic_reason_reels_surface">Visualizzatore Reels</string>
+    <string name="diagnostic_reason_reel_signal">Segnale esplicito di Reel</string>
+    <string name="diagnostic_reason_normal_video">Segnale di video normale</string>
+    <string name="diagnostic_reason_story">Segnale di storia</string>
+    <string name="diagnostic_reason_none">Nessun obiettivo da bloccare</string>
     <string name="startup_body">Preparazione della pausa digitale…</string>
     <string name="blocked_overlay_title">Reel bloccato</string>
     <string name="overlay_exit">Esci da Instagram</string>
