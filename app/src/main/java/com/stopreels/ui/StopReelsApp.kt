@@ -56,6 +56,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SegmentedButton
 import androidx.compose.material3.SingleChoiceSegmentedButtonRow
 import androidx.compose.material3.Slider
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -79,6 +80,7 @@ import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -231,29 +233,41 @@ fun StopReelsApp(viewModel: StopReelsViewModel) {
 
 @Composable
 private fun StartupScreen() {
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(24.dp),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center,
+    val startupBackground = Color(0xFF081E31)
+    Surface(
+        modifier = Modifier.fillMaxSize(),
+        color = startupBackground,
+        contentColor = Color.White,
     ) {
-        Icon(
-            imageVector = Icons.Outlined.Shield,
-            contentDescription = null,
-            tint = MaterialTheme.colorScheme.secondary,
-            modifier = Modifier.size(72.dp),
-        )
-        Spacer(Modifier.height(18.dp))
-        Text(
-            text = stringResource(R.string.app_name),
-            style = MaterialTheme.typography.headlineMedium,
-            fontWeight = FontWeight.Bold,
-        )
-        Spacer(Modifier.height(8.dp))
-        Text(stringResource(R.string.startup_body), style = MaterialTheme.typography.bodyMedium)
-        Spacer(Modifier.height(20.dp))
-        CircularProgressIndicator()
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(24.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center,
+        ) {
+            Icon(
+                imageVector = Icons.Outlined.Shield,
+                contentDescription = null,
+                tint = Color(0xFFFFB48F),
+                modifier = Modifier.size(72.dp),
+            )
+            Spacer(Modifier.height(18.dp))
+            Text(
+                text = stringResource(R.string.app_name),
+                style = MaterialTheme.typography.headlineMedium,
+                fontWeight = FontWeight.Bold,
+                color = Color.White,
+            )
+            Spacer(Modifier.height(8.dp))
+            Text(
+                stringResource(R.string.startup_body),
+                style = MaterialTheme.typography.bodyMedium,
+                color = Color(0xFFE1ECF5),
+            )
+            Spacer(Modifier.height(20.dp))
+            CircularProgressIndicator(color = Color(0xFFFFB48F))
+        }
     }
 }
 

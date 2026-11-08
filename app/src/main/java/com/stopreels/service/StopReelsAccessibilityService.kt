@@ -53,7 +53,6 @@ class StopReelsAccessibilityService : AccessibilityService() {
     private lateinit var windowManager: WindowManager
     private var preferences = AppPreferences()
     private var lastPackage: String? = null
-    private var lastWindowId: Int? = null
     private var lastOverlayKey: String? = null
     private var lastCountedKey: String? = null
     private var unlockedUntilUptime: Long = 0L
@@ -114,16 +113,11 @@ class StopReelsAccessibilityService : AccessibilityService() {
             clearOverlays()
             lastCountedKey = null
         }
-        if (event != null &&
-            (event.eventType == AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED ||
-                event.eventType == AccessibilityEvent.TYPE_WINDOWS_CHANGED) &&
-            lastWindowId != null && lastWindowId != event.windowId
-        ) {
-            clearOverlays()
-            lastCountedKey = null
-        }
+        // Instagram can switch between several internal windows while opening
+        // the Reel viewer. Do not remove a valid cover merely because the
+        // accessibility window id changed; processActiveWindow verifies the
+        // package and the detector decides when the cover is no longer needed.
         lastPackage = packageName
-        lastWindowId = event?.windowId
         scheduleProcess()
         mainHandler.removeCallbacks(heartbeatRunnable)
         mainHandler.postDelayed(heartbeatRunnable, 700L)
@@ -167,7 +161,6 @@ class StopReelsAccessibilityService : AccessibilityService() {
             if (rootPackage != application.packageName) {
                 clearOverlays()
                 lastPackage = rootPackage
-                lastWindowId = null
                 mainHandler.removeCallbacks(heartbeatRunnable)
             }
             return
@@ -203,7 +196,12 @@ class StopReelsAccessibilityService : AccessibilityService() {
 
         lastPositiveDetectionUptime = SystemClock.uptimeMillis()
         val newKey = result.stableKey
-        if (newKey == lastOverlayKey) return
+        // A vendor can detach an accessibility overlay during a window
+        // transition without sending us a matching event. Only reuse the key
+        // while a real attached view still exists; otherwise recreate it.
+        if (newKey == lastOverlayKey && currentOverlays.isNotEmpty() && currentOverlays.all { it.first.isAttachedToWindow }) {
+            return
+        }
         clearOverlays()
         result.targets.forEach { target -> addBlockingOverlay(target, preferences) }
         lastOverlayKey = newKey
