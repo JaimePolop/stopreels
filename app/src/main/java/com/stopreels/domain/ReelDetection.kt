@@ -215,18 +215,18 @@ object ReelDetectionEngine {
         "usuarios",
         "users",
     )
-    private val privateContainerIdTokens = listOf(
-        "direct",
-        "inbox",
-        "thread",
-        "conversation",
-        "chat",
+    // Generic Direct/inbox IDs also appear in Instagram's global navigation and
+    // search shell. Only these message/media-specific IDs are strong enough to
+    // exempt a Reel when the visible conversation title is missing.
+    private val strongPrivateMediaContainerIdTokens = listOf(
+        "thread_message",
         "shared_media",
         "sharedmedia",
         "media_message",
         "reel_shared",
         "shared_reel",
         "sent_media",
+        "message_media",
     )
 
     fun detect(root: AccessibilityNodeSnapshot, preferences: DetectionPreferences): DetectionResult {
@@ -276,17 +276,17 @@ object ReelDetectionEngine {
         val hasSharedMediaSignal = allText.any { signal ->
             sharedMediaTokens.any(signal::contains)
         }
-        val hasPrivateContainerSignal = nodes.any { node ->
+        val hasStrongPrivateMediaContainerSignal = nodes.any { node ->
             !isBottomNavigationNode(node, root.bounds) &&
                 node.viewId.orEmpty().lowercase(Locale.ROOT).let { id ->
-                    privateContainerIdTokens.any(id::contains)
+                    strongPrivateMediaContainerIdTokens.any(id::contains)
                 }
         }
         // Instagram often exposes "Direct" or "Mensajes" in the global navigation.
         // Those labels alone must never make the whole feed look like a private chat.
         val detectedPrivateContext = hasSharedMediaSignal ||
             hasConversationContextSignal && (hasDirectRouteSignal || hasEditableMessageField) ||
-            hasPrivateContainerSignal && (hasDirectRouteSignal || hasReelLikeContent(allText)) ||
+            hasStrongPrivateMediaContainerSignal ||
             hasEditableMessageField && hasDirectRouteSignal
         // Direct and media shared by another person are always exempt. This is
         // intentionally not configurable: a partial accessibility hierarchy
@@ -477,10 +477,6 @@ object ReelDetectionEngine {
         if (screen.height <= 0) return false
         val isSmall = node.bounds.height <= 220 && node.bounds.width <= (screen.width * 0.45f).toInt()
         return isSmall && node.bounds.top >= screen.top + (screen.height * 0.72f).toInt()
-    }
-
-    private fun hasReelLikeContent(signals: List<String>): Boolean = signals.any { signal ->
-        reelTokens.any(signal::contains) || normalVideoTokens.any(signal::contains)
     }
 
     private fun nearestContainingNode(
