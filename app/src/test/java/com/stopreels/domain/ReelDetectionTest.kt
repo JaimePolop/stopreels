@@ -43,6 +43,26 @@ class ReelDetectionTest {
     }
 
     @Test
+    fun reelViewerMessageActionDoesNotLookLikeDirectConversation() {
+        val root = node(
+            children = listOf(
+                node(text = "Reels"),
+                node(
+                    contentDescription = "Reel en reproducción",
+                    className = "android.view.SurfaceView",
+                    bounds = ScreenRect(0, 200, 1080, 2_200),
+                ),
+                node(text = "Enviar mensaje"),
+            ),
+        )
+
+        val result = ReelDetectionEngine.detect(root, DetectionPreferences())
+
+        assertTrue(result.shouldBlock)
+        assertFalse(result.isPrivateContext)
+    }
+
+    @Test
     fun reelsNavigationLabelAloneIsNotBlocked() {
         val root = node(
             children = listOf(

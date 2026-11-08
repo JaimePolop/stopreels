@@ -163,7 +163,10 @@ object ReelDetectionEngine {
         "foto enviada",
         "imagen enviada",
     )
-    private val privateConversationTokens = listOf(
+    // These identify a conversation header/composer. Actions exposed by the
+    // Reel viewer such as "Send message" are intentionally excluded: they are
+    // present on ordinary Reels and do not mean that the user is in Direct.
+    private val conversationContextTokens = listOf(
         "conversacion con",
         "conversation with",
         "chat con",
@@ -171,17 +174,6 @@ object ReelDetectionEngine {
         "escribe un mensaje",
         "escribir un mensaje",
         "write a message",
-        "enviar mensaje",
-        "send message",
-        "te ha enviado",
-        "enviado por",
-        "sent you",
-        "reel compartido",
-        "video compartido",
-        "shared reel",
-        "shared video",
-        "compartido por",
-        "shared by",
     )
     private val storyTokens = listOf("historia", "historias", "story", "stories", "tu historia", "your story")
     private val reelsRouteTokens = setOf(
@@ -261,8 +253,8 @@ object ReelDetectionEngine {
             it.className?.contains("EditText", ignoreCase = true) == true &&
                 nodeSignals(it).any(::containsMessageFieldSignal)
         }
-        val hasConversationSignal = allText.any { signal ->
-            privateConversationTokens.any(signal::contains)
+        val hasConversationContextSignal = allText.any { signal ->
+            conversationContextTokens.any(signal::contains)
         }
         val hasSharedMediaSignal = allText.any { signal ->
             sharedMediaTokens.any(signal::contains)
@@ -276,7 +268,7 @@ object ReelDetectionEngine {
         // Instagram often exposes "Direct" or "Mensajes" in the global navigation.
         // Those labels alone must never make the whole feed look like a private chat.
         val detectedPrivateContext = hasSharedMediaSignal ||
-            hasConversationSignal ||
+            hasConversationContextSignal && (hasDirectRouteSignal || hasEditableMessageField) ||
             hasPrivateContainerSignal && (hasDirectRouteSignal || hasReelLikeContent(allText)) ||
             hasEditableMessageField && hasDirectRouteSignal
         // Direct and media shared by another person are always exempt. This is
