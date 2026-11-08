@@ -95,10 +95,22 @@ data class DetectionPreferences(
     val diagnosticMode: Boolean = false,
 )
 
+enum class DetectionReason {
+    NONE,
+    SEARCH_SCREEN,
+    PRIVATE_CONTEXT,
+    REELS_ROUTE_AND_SURFACE,
+    EXPLICIT_REEL_SIGNAL,
+    NORMAL_VIDEO_SIGNAL,
+    STORY_SIGNAL,
+}
+
 data class DetectionResult(
     val screen: InstagramScreen,
     val isPrivateContext: Boolean,
     val targets: List<BlockTarget>,
+    val confidence: Int = 0,
+    val reason: DetectionReason = DetectionReason.NONE,
 ) {
     val shouldBlock: Boolean get() = targets.isNotEmpty()
     // Instagram changes labels and accessibility IDs while a Reel is playing. The
@@ -246,7 +258,12 @@ object ReelDetectionEngine {
         if (hasSearchInputControl && (hasSearchResultSignal || hasSearchIdSignal)) {
             // Search results may contain Reels while the user is looking for a
             // person. Search is not the Reels viewer, so leave these results alone.
-            return DetectionResult(InstagramScreen.UNKNOWN, false, emptyList())
+            return DetectionResult(
+                screen = InstagramScreen.UNKNOWN,
+                isPrivateContext = false,
+                targets = emptyList(),
+                reason = DetectionReason.SEARCH_SCREEN,
+            )
         }
         val hasDirectRouteSignal = allText.any(::containsDirectRouteSignal)
         val hasEditableMessageField = nodes.any {
@@ -278,7 +295,13 @@ object ReelDetectionEngine {
 
         val hasStorySignal = allText.any { signal -> storyTokens.any(signal::contains) }
         if (hasStorySignal && !preferences.blockStories) {
-            return DetectionResult(InstagramScreen.STORY, isPrivateContext, emptyList())
+            return DetectionResult(
+                screen = InstagramScreen.STORY,
+                isPrivateContext = isPrivateContext,
+                targets = emptyList(),
+                confidence = 80,
+                reason = DetectionReason.STORY_SIGNAL,
+            )
         }
 
         if (hasStorySignal && preferences.blockStories && !isPrivateContext) {
@@ -296,6 +319,8 @@ object ReelDetectionEngine {
                             sourceKey = sourceKey(storyNode),
                         ),
                     ),
+                    confidence = 85,
+                    reason = DetectionReason.STORY_SIGNAL,
                 )
             }
         }
@@ -325,15 +350,17 @@ object ReelDetectionEngine {
                 screen = if (isPrivateContext) InstagramScreen.DIRECT else InstagramScreen.UNKNOWN,
                 isPrivateContext = isPrivateContext,
                 targets = emptyList(),
+                confidence = if (isPrivateContext) 100 else 0,
+                reason = if (isPrivateContext) DetectionReason.PRIVATE_CONTEXT else DetectionReason.NONE,
             )
         }
 
         val screen = classifyScreen(root, contentNodes)
         if (screen == InstagramScreen.REELS && !preferences.blockReelsTab) {
-            return DetectionResult(screen, isPrivateContext, emptyList())
+            return DetectionResult(screen, isPrivateContext, emptyList(), reason = DetectionReason.REELS_ROUTE_AND_SURFACE)
         }
         if (screen == InstagramScreen.FEED && reelNodes.isNotEmpty() && !preferences.blockFeedReels) {
-            return DetectionResult(screen, isPrivateContext, emptyList())
+            return DetectionResult(screen, isPrivateContext, emptyList(), reason = DetectionReason.EXPLICIT_REEL_SIGNAL)
         }
         val screenBounds = root.bounds
         val fullSurface = contentNodes.firstOrNull { node ->
@@ -347,6 +374,8 @@ object ReelDetectionEngine {
                 targets = listOf(
                     BlockTarget(screenBounds, BlockTargetKind.REELS_SURFACE, sourceKey(fullSurface)),
                 ),
+                confidence = 100,
+                reason = DetectionReason.REELS_ROUTE_AND_SURFACE,
             )
         }
 
@@ -365,6 +394,12 @@ object ReelDetectionEngine {
                         sourceKey = sourceKey(contentNodes.first()),
                     ),
                 ),
+                confidence = if (reelNodes.isNotEmpty()) 95 else 75,
+                reason = if (reelNodes.isNotEmpty()) {
+                    DetectionReason.EXPLICIT_REEL_SIGNAL
+                } else {
+                    DetectionReason.NORMAL_VIDEO_SIGNAL
+                },
             )
         }
 
@@ -386,7 +421,17 @@ object ReelDetectionEngine {
             .distinctBy { "${it.kind}:${it.bounds}" }
             .take(3)
 
-        return DetectionResult(screen, false, targets)
+        return DetectionResult(
+            screen = screen,
+            isPrivateContext = false,
+            targets = targets,
+            confidence = if (reelNodes.isNotEmpty()) 90 else 70,
+            reason = if (reelNodes.isNotEmpty()) {
+                DetectionReason.EXPLICIT_REEL_SIGNAL
+            } else {
+                DetectionReason.NORMAL_VIDEO_SIGNAL
+            },
+        )
     }
 
     private fun classifyScreen(root: AccessibilityNodeSnapshot, reelNodes: List<AccessibilityNodeSnapshot>): InstagramScreen {
