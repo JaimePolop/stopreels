@@ -27,6 +27,12 @@ Configure signing in a local `keystore.properties` file that is ignored by Git,
 then build:
 
 ```bash
+cp keystore.properties.example keystore.properties
+```
+
+Fill in that local file with the keystore path and passwords. Never commit it.
+
+```bash
 ./gradlew clean test lint bundleRelease
 ```
 

@@ -23,6 +23,7 @@ data class AppPreferences(
     val blockShortcuts: Boolean = false,
     val temporaryUnlockEnabled: Boolean = true,
     val unlockDurationSeconds: Int = 30,
+    val unlockDelaySeconds: Int = 5,
     val blockStories: Boolean = false,
     val blockNormalVideos: Boolean = false,
     val allowPrivateMedia: Boolean = true,
@@ -47,6 +48,7 @@ class PreferencesRepository(private val context: Context) {
         val blockShortcuts = booleanPreferencesKey("block_shortcuts")
         val temporaryUnlockEnabled = booleanPreferencesKey("temporary_unlock_enabled")
         val unlockDurationSeconds = intPreferencesKey("unlock_duration_seconds")
+        val unlockDelaySeconds = intPreferencesKey("unlock_delay_seconds")
         val blockStories = booleanPreferencesKey("block_stories")
         val blockNormalVideos = booleanPreferencesKey("block_normal_videos")
         val allowPrivateMedia = booleanPreferencesKey("allow_private_media")
@@ -76,6 +78,7 @@ class PreferencesRepository(private val context: Context) {
                 blockShortcuts = values[Keys.blockShortcuts] ?: false,
                 temporaryUnlockEnabled = values[Keys.temporaryUnlockEnabled] ?: true,
                 unlockDurationSeconds = values[Keys.unlockDurationSeconds] ?: 30,
+                unlockDelaySeconds = (values[Keys.unlockDelaySeconds] ?: 5).coerceIn(1, 30),
                 blockStories = values[Keys.blockStories] ?: false,
                 blockNormalVideos = values[Keys.blockNormalVideos] ?: false,
                 allowPrivateMedia = values[Keys.allowPrivateMedia] ?: true,
@@ -123,6 +126,10 @@ class PreferencesRepository(private val context: Context) {
 
     suspend fun setUnlockDurationSeconds(seconds: Int) = context.stopReelsDataStore.edit {
         it[Keys.unlockDurationSeconds] = seconds.coerceIn(15, 60)
+    }
+
+    suspend fun setUnlockDelaySeconds(seconds: Int) = context.stopReelsDataStore.edit {
+        it[Keys.unlockDelaySeconds] = seconds.coerceIn(1, 30)
     }
 
     suspend fun setBlockStories(enabled: Boolean) = context.stopReelsDataStore.edit {

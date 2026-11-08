@@ -212,12 +212,10 @@ object ReelDetectionEngine {
 
         val nodes = root.flattened().filter { it.visibleToUser }
         val allText = nodes.flatMap { nodeSignals(it) }
-        val hasSearchField = nodes.any { node ->
+        val hasSearchInputControl = nodes.any { node ->
             val className = node.className.orEmpty()
-            val signals = nodeSignals(node)
             className.contains("SearchView", ignoreCase = true) ||
-                className.contains("EditText", ignoreCase = true) &&
-                    signals.any { it == "buscar" || it == "search" || it.contains("buscar") || it.contains("search") }
+                className.contains("EditText", ignoreCase = true)
         }
         val hasSearchResultSignal = allText.any { signal -> searchResultTokens.any(signal::contains) }
         val hasSearchIdSignal = nodes.any { node ->
@@ -226,7 +224,7 @@ object ReelDetectionEngine {
                 normalizedId.contains("search") || normalizedId.contains("buscar")
             } == true
         }
-        if (hasSearchField && (hasSearchResultSignal || hasSearchIdSignal)) {
+        if (hasSearchInputControl && (hasSearchResultSignal || hasSearchIdSignal)) {
             // Search results may contain Reels while the user is looking for a
             // person. Search is not the Reels viewer, so leave these results alone.
             return DetectionResult(InstagramScreen.UNKNOWN, false, emptyList())

@@ -4,6 +4,7 @@
     <string name="startup_body">Preparing your digital pause…</string>
     <string name="accessibility_service_description">Detects Reel elements inside Instagram and covers them locally. It does not use the Internet or store screenshots.</string>
     <string name="blocked_overlay_title">Reel blocked</string>
+    <string name="blocked_overlay_reason">Short-form video can encourage automatic scrolling. Excessive or problematic use is associated with poorer sleep, reduced sustained attention, and more stress. This pause helps you choose intentionally.</string>
     <string name="diagnostic_overlay">Diagnostics: %1$s</string>
     <string name="overlay_exit">Exit Instagram</string>
     <string name="temporary_unlock">View for %1$d seconds</string>
@@ -72,6 +73,8 @@
     <string name="temporary_title">Allow temporary unlock</string>
     <string name="temporary_summary">Shows a Reel for a limited time after confirmation.</string>
     <string name="duration_title">Unlock duration</string>
+    <string name="unlock_delay_title">Waiting time before unlocking</string>
+    <string name="unlock_delay_summary">After tapping to view a Reel, wait this long before you can confirm the temporary unlock.</string>
     <string name="seconds">%1$d s</string>
     <string name="stories_title">Block stories</string>
     <string name="stories_summary">Optional. Stories are not blocked by default.</string>
@@ -106,7 +109,8 @@
     <string name="copyright_title">Copyright and licence</string>
     <string name="copyright_body">Copyright © 2026 StopReels. All rights reserved. StopReels and its source code may not be copied, redistributed or published in another application without permission from the copyright holder.</string>
     <string name="confirm_unlock_title">View this Reel?</string>
-    <string name="confirm_unlock_body">Blocking will be disabled for %1$d seconds and then return automatically.</string>
+    <string name="confirm_unlock_body">Blocking will be disabled for %1$d seconds and then return automatically. Wait %2$d seconds before confirming.</string>
+    <string name="confirm_waiting">Wait %1$d s</string>
     <string name="cancel">Cancel</string>
     <string name="confirm">Confirm</string>
 </resources>

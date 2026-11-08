@@ -4,6 +4,7 @@
     <string name="startup_body">Preparando tu pausa digital…</string>
     <string name="accessibility_service_description">Detecta elementos de Reels dentro de Instagram para cubrirlos localmente. No usa Internet ni almacena capturas.</string>
     <string name="blocked_overlay_title">Reel bloqueado</string>
+    <string name="blocked_overlay_reason">Los vídeos cortos pueden fomentar el desplazamiento automático. El uso excesivo o problemático se relaciona con peor sueño, más dificultad para mantener la atención y más estrés. Esta pausa te ayuda a decidir conscientemente.</string>
     <string name="diagnostic_overlay">Diagnóstico: %1$s</string>
     <string name="overlay_exit">Salir de Instagram</string>
     <string name="temporary_unlock">Ver durante %1$d segundos</string>
@@ -72,6 +73,8 @@
     <string name="temporary_title">Permitir desbloqueo temporal</string>
     <string name="temporary_summary">Muestra un Reel durante un tiempo limitado tras confirmarlo.</string>
     <string name="duration_title">Duración del desbloqueo</string>
+    <string name="unlock_delay_title">Espera antes de desbloquear</string>
+    <string name="unlock_delay_summary">Después de pulsar para ver un Reel, espera este tiempo antes de confirmar el desbloqueo temporal.</string>
     <string name="seconds">%1$d s</string>
     <string name="stories_title">Bloquear historias</string>
     <string name="stories_summary">Opcional. Las historias no se bloquean por defecto.</string>
@@ -106,7 +109,8 @@
     <string name="copyright_title">Copyright y licencia</string>
     <string name="copyright_body">Copyright © 2026 StopReels. Todos los derechos reservados. StopReels y su código fuente no pueden copiarse, redistribuirse ni publicarse dentro de otra aplicación sin permiso del titular.</string>
     <string name="confirm_unlock_title">¿Ver este Reel?</string>
-    <string name="confirm_unlock_body">El bloqueo se desactivará durante %1$d segundos y volverá automáticamente.</string>
+    <string name="confirm_unlock_body">El bloqueo se desactivará durante %1$d segundos y volverá automáticamente. Espera %2$d segundos antes de confirmar.</string>
+    <string name="confirm_waiting">Espera %1$d s</string>
     <string name="cancel">Cancelar</string>
     <string name="confirm">Confirmar</string>
 </resources>

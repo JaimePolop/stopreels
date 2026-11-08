@@ -8,6 +8,7 @@ import android.graphics.Rect
 import android.os.Handler
 import android.os.Looper
 import android.os.SystemClock
+import android.os.CountDownTimer
 import android.view.Gravity
 import android.view.View
 import android.view.WindowManager
@@ -215,6 +216,7 @@ class StopReelsAccessibilityService : AccessibilityService() {
             context = this,
             target = target,
             durationSeconds = currentPreferences.unlockDurationSeconds,
+            delaySeconds = currentPreferences.unlockDelaySeconds,
             canUnlock = currentPreferences.temporaryUnlockEnabled,
             diagnosticMode = currentPreferences.diagnosticMode,
             onUnlock = { requestTemporaryUnlock(currentPreferences.unlockDurationSeconds) },
@@ -359,11 +361,13 @@ private class BlockOverlayView(
     context: android.content.Context,
     private val target: BlockTarget,
     private val durationSeconds: Int,
+    private val delaySeconds: Int,
     private val canUnlock: Boolean,
     private val diagnosticMode: Boolean,
     private val onUnlock: () -> Unit,
     private val onExit: () -> Unit,
 ) : FrameLayout(context) {
+    private var unlockCountdown: CountDownTimer? = null
     private val overlayTextColor = if (
         (resources.configuration.uiMode and android.content.res.Configuration.UI_MODE_NIGHT_MASK) ==
             android.content.res.Configuration.UI_MODE_NIGHT_YES
@@ -396,6 +400,8 @@ private class BlockOverlayView(
     }
 
     private fun showBlockedState() {
+        unlockCountdown?.cancel()
+        unlockCountdown = null
         content.removeAllViews()
         val title = TextView(context).apply {
             text = context.getString(R.string.blocked_overlay_title)
@@ -405,6 +411,16 @@ private class BlockOverlayView(
             setTypeface(typeface, android.graphics.Typeface.BOLD)
         }
         content.addView(title, LinearLayout.LayoutParams(-1, -2))
+
+        TextView(context).also { reason ->
+            reason.text = context.getString(R.string.blocked_overlay_reason)
+            reason.textSize = 13f
+            reason.setTextColor(overlayTextColor)
+            reason.gravity = Gravity.CENTER
+            content.addView(reason, LinearLayout.LayoutParams(-1, -2).apply {
+                topMargin = 8
+            })
+        }
 
         if (diagnosticMode) {
             TextView(context).also { diagnostic ->
@@ -445,6 +461,7 @@ private class BlockOverlayView(
     }
 
     private fun showConfirmationState() {
+        unlockCountdown?.cancel()
         content.removeAllViews()
         TextView(context).also { title ->
             title.text = context.getString(R.string.confirm_unlock_title)
@@ -455,7 +472,7 @@ private class BlockOverlayView(
             content.addView(title, LinearLayout.LayoutParams(-1, -2))
         }
         TextView(context).also { body ->
-            body.text = context.getString(R.string.confirm_unlock_body, durationSeconds)
+            body.text = context.getString(R.string.confirm_unlock_body, durationSeconds, delaySeconds)
             body.gravity = Gravity.CENTER
             body.setTextColor(overlayTextColor)
             content.addView(body, LinearLayout.LayoutParams(-1, -2).apply { topMargin = 8 })
@@ -467,12 +484,38 @@ private class BlockOverlayView(
                 setOnClickListener { showBlockedState() }
             }
             val confirm = Button(context).apply {
-                text = context.getString(R.string.confirm)
+                isEnabled = delaySeconds <= 0
+                text = if (isEnabled) {
+                    context.getString(R.string.confirm)
+                } else {
+                    context.getString(R.string.confirm_waiting, delaySeconds)
+                }
                 setOnClickListener { onUnlock() }
             }
             actions.addView(cancel)
             actions.addView(confirm)
             content.addView(actions, LinearLayout.LayoutParams(-2, -2).apply { topMargin = 8 })
+
+            if (delaySeconds > 0) {
+                unlockCountdown = object : CountDownTimer(delaySeconds * 1_000L, 1_000L) {
+                    override fun onTick(millisUntilFinished: Long) {
+                        val remaining = ((millisUntilFinished + 999L) / 1_000L).toInt()
+                        confirm.text = context.getString(R.string.confirm_waiting, remaining)
+                    }
+
+                    override fun onFinish() {
+                        confirm.isEnabled = true
+                        confirm.text = context.getString(R.string.confirm)
+                        unlockCountdown = null
+                    }
+                }.start()
+            }
         }
+    }
+
+    override fun onDetachedFromWindow() {
+        unlockCountdown?.cancel()
+        unlockCountdown = null
+        super.onDetachedFromWindow()
     }
 }
