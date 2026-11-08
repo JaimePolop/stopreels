@@ -52,6 +52,10 @@ class StopReelsViewModel(application: Application) : AndroidViewModel(applicatio
         viewModelScope.launch { repository.setUnlockDurationSeconds(seconds) }
     }
 
+    fun setUnlockDelaySeconds(seconds: Int) {
+        viewModelScope.launch { repository.setUnlockDelaySeconds(seconds) }
+    }
+
     fun setBlockStories(enabled: Boolean) {
         viewModelScope.launch { repository.setBlockStories(enabled) }
     }

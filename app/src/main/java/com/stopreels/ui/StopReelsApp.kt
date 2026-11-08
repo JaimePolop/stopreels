@@ -196,6 +196,7 @@ fun StopReelsApp(viewModel: StopReelsViewModel) {
                     onShortcutsChanged = viewModel::setBlockShortcuts,
                     onTemporaryChanged = viewModel::setTemporaryUnlockEnabled,
                     onDurationChanged = viewModel::setUnlockDurationSeconds,
+                    onUnlockDelayChanged = viewModel::setUnlockDelaySeconds,
                     onStoriesChanged = viewModel::setBlockStories,
                     onNormalVideosChanged = viewModel::setBlockNormalVideos,
                     onPrivateMediaChanged = viewModel::setAllowPrivateMedia,
@@ -579,6 +580,7 @@ private fun SettingsScreen(
     onShortcutsChanged: (Boolean) -> Unit,
     onTemporaryChanged: (Boolean) -> Unit,
     onDurationChanged: (Int) -> Unit,
+    onUnlockDelayChanged: (Int) -> Unit,
     onStoriesChanged: (Boolean) -> Unit,
     onNormalVideosChanged: (Boolean) -> Unit,
     onPrivateMediaChanged: (Boolean) -> Unit,
@@ -630,6 +632,21 @@ private fun SettingsScreen(
                     selected = preferences.unlockDurationSeconds == seconds,
                     onClick = { onDurationChanged(seconds) },
                     shape = androidx.compose.material3.SegmentedButtonDefaults.itemShape(index, 3),
+                    modifier = Modifier.weight(1f),
+                ) {
+                    Text(stringResource(R.string.seconds, seconds))
+                }
+            }
+        }
+        Spacer(Modifier.height(10.dp))
+        Text(stringResource(R.string.unlock_delay_title), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
+        Text(stringResource(R.string.unlock_delay_summary), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        SingleChoiceSegmentedButtonRow(modifier = Modifier.fillMaxWidth()) {
+            listOf(3, 5, 10, 15).forEachIndexed { index, seconds ->
+                SegmentedButton(
+                    selected = preferences.unlockDelaySeconds == seconds,
+                    onClick = { onUnlockDelayChanged(seconds) },
+                    shape = androidx.compose.material3.SegmentedButtonDefaults.itemShape(index, 4),
                     modifier = Modifier.weight(1f),
                 ) {
                     Text(stringResource(R.string.seconds, seconds))
