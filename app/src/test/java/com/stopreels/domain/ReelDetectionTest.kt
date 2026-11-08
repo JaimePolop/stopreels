@@ -220,6 +220,21 @@ class ReelDetectionTest {
     }
 
     @Test
+    fun genericDirectContainerDoesNotExemptFeedReel() {
+        val root = node(
+            children = listOf(
+                node(viewId = "com.instagram.android:id/direct_tab", text = "Mensajes"),
+                node(contentDescription = "Reel de @ana", bounds = ScreenRect(40, 400, 1040, 1_200)),
+            ),
+        )
+
+        val result = ReelDetectionEngine.detect(root, DetectionPreferences())
+
+        assertTrue(result.shouldBlock)
+        assertFalse(result.isPrivateContext)
+    }
+
+    @Test
     fun unrelatedEditTextDoesNotMakeFeedLookLikePrivateChat() {
         val root = node(
             children = listOf(
